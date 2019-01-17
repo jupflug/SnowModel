@@ -1,0 +1,37 @@
+
+path=./
+
+filename1=enbal_code.f
+filename2=micromet_code.f
+filename3=preprocess_code.f
+filename4=readparam_code.f
+filename5=snowmodel_main.f
+filename6=snowpack_code.f
+filename7=snowtran_code.f
+filename8=dataassim_user.f
+filename9=outputs_user.f
+
+# Using the Portland Group compiler.
+#pgf77 -O3 -mcmodel=medium -I$path -o ../snowmodel $path$filename1 $path$filename2 $path$filename3 $path$filename4 $path$filename5 $path$filename6 $path$filename7 $path$filename8 $path$filename9
+
+# To compile with gfortran, g77, or f77 use the following command,
+#   and comment out, with a #, the 'rm' statement below.
+
+gfortran -O3 -mcmodel=medium -I$path -o ../snowmodel $path$filename1 $path$filename2 $path$filename3 $path$filename4 $path$filename5 $path$filename6 $path$filename7 $path$filename8 $path$filename9
+
+#g77 -O3 -I$path -o ../snowmodel $path$filename1 $path$filename2 $path$filename3 $path$filename4 $path$filename5 $path$filename6 $path$filename7 $path$filename8 $path$filename9
+
+#f77 -O3 -I$path -o ../snowmodel $path$filename1 $path$filename2 $path$filename3 $path$filename4 $path$filename5 $path$filename6 $path$filename7 $path$filename8 $path$filename9
+
+filename11=enbal_code.o
+filename22=micromet_code.o
+filename33=preprocess_code.o
+filename44=readparam_code.o
+filename55=snowmodel_main.o
+filename66=snowpack_code.o
+filename77=snowtran_code.o
+filename88=dataassim_user.o
+filename99=outputs_user.o
+
+#rm $filename11 $filename22 $filename33 $filename44 $filename55 $filename66 $filename77 $filename88 $filename99
+
