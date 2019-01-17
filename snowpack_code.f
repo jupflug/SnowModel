@@ -148,7 +148,7 @@ c END J.PFLUG
      &      dz_snow_min,tslsnowfall(i,j),change_layer(i,j),dy_snow_z,
      &      swe_lyr_z,ro_layer_z,T_old_z,gamma_z,multilayer_snowpack,
      &      Cp_snow,seaice_run,fc_param,t_avg,Cp_water,ml_ret_z,
-     &      Saturn_z)
+     &      Saturn_z,i,j)
 
 c Re-build the 3-D arrays.  See note above about using f95 to avoid this.
           if (multilayer_snowpack.eq.1) then
@@ -228,13 +228,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  dz_snow_min,tslsnowfall,change_layer,dy_snow,
      &  swe_lyr,ro_layer,T_old,gamma,multilayer_snowpack,
      &  Cp_snow,seaice_run,fc_param,t_avg,
-     &  Cp_water,ml_ret,Saturn)
+     &  Cp_water,ml_ret,Saturn,xxx,yyy)
 
       implicit none
 
       include 'snowmodel.inc'
 
-      integer iter,icorr_factor_index
+      integer iter,icorr_factor_index,xxx,yyy
 
       integer JJ,max_layers,multilayer_snowpack
       
@@ -300,7 +300,7 @@ c Call the multi-layer snowpack model.
      &    Qe,sfc_sublim_flag,sum_sfcsublim,soft_snow_d,ro_snow,
      &    sum_sprec,sprec_grnd_ml,sum_prec,prec,sum_runoff,
      &    ro_snow_grid,xro_snow,swesublim,A1,A2,
-     &    fc_param,Cp_water,ml_ret,Saturn)
+     &    fc_param,Cp_water,ml_ret,Saturn,xxx,yyy)
 
 c Call the original single-layer snowpack model.
       else
@@ -319,6 +319,7 @@ c   the snowpack depth, density, and snow water equivalent.
      &    sum_swemelt,corr_factor,icorr_factor_index,swesublim,
      &    ro_snowmax)
 
+
 c Post process the data for output.
         CALL POSTPROC(ro_snow_grid,xro_snow,snow_depth,undef)
       endif
@@ -335,7 +336,7 @@ c    &      sum_runoff,canopy_int,swe_depth,sum_glacmelt,iter,
 c    &      snow_d_init,ro_snow,ro_water,sum_sfcsublim)
         endif
       endif
-      
+
       return
       end
 
@@ -971,13 +972,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  Qe,sfc_sublim_flag,sum_sfcsublim,soft_snow_d,ro_snow,
      &  sum_sprec,sprec_grnd_ml,sum_prec,prec,sum_runoff,
      &  ro_snow_grid,xro_snow,swesublim,A1,A2,fc_param,
-     &  Cp_water,ml_ret,Saturn)
+     &  Cp_water,ml_ret,Saturn,xxx,yyy)
 
       implicit none
 
       include 'snowmodel.inc'
 
-      integer JJ,max_layers
+      integer JJ,max_layers,xxx,yyy
       integer melt_flag(nz_max)
       integer i,j
 
@@ -1033,7 +1034,7 @@ c Distribute surface melt and rain precipitation through the snowpack.
      &  change_layer,dz_snow_min,gamma,max_layers,prec,ro_nsnow,
      &  ro_snow,ro_snow_grid,snow_d,sprec_grnd_ml,sum_prec,
      &  sum_runoff,sum_sprec,tsfc,tsls_threshold,tslsnowfall,undef,
-     &  xro_snow,Saturn)
+     &  xro_snow,Saturn,xxx,yyy)
      
 c Account for the accumulation of snow precipitation on the snowpack.
 c      CALL PRECIP_ML(JJ,ro_layer,dy_snow,ro_water,tslsnowfall,
@@ -1091,13 +1092,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       SUBROUTINE POST_PROC_ML(JJ,dy_snow,snow_depth,swe_depth,undef,
      &  swe_lyr,gamma,ro_layer,melt_flag,T_old,Tf,ro_snow_grid,
-     &  ro_water,xro_snow)
+     &  ro_water,xro_snow,xxx,yyy)
 
       implicit none
 
       include 'snowmodel.inc'
 
-      integer j,JJ
+      integer j,JJ,xxx,yyy
 
       real dy_snow(nz_max)
       real swe_lyr(nz_max)
@@ -1300,14 +1301,14 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  change_layer,dz_snow_min,gamma,max_layers,prec,ro_nsnow,
      &  ro_snow,ro_snow_grid,snow_d,sprec_grnd_ml,sum_prec,
      &  sum_runoff,sum_sprec,tsfc,tsls_threshold,tslsnowfall,undef,
-     &  xro_snow,Saturn)
+     &  xro_snow,Saturn,xxx,yyy)
 
 
       implicit none
 
       include 'snowmodel.inc'
 
-      integer j,JJ
+      integer j,JJ,xxx,yyy
 
       real swe_lyr(nz_max)
       real ro_layer(nz_max)
@@ -1552,10 +1553,14 @@ c if approaching convergence, force to converge
         
 c rebuild the snowpack
             swe_lyr(j) = swe_lyr(j) + sumup - liqflux
+            
+
             ro_layer(j) = swe_lyr(j) * ro_water/dy_snow(j)
             sumup = liqflux
 
           enddo
+
+          if (JJ.eq.1.and.swe_lyr(JJ).eq.0.) JJ = 0
 
 c flux out of the last snow layer goes to runoff
           runoff = runoff + sumup
@@ -1620,7 +1625,7 @@ c Calculate the temperature of each snow layer.
 c Postprocess the data.
         CALL POST_PROC_ML(JJ,dy_snow,snow_depth,swe_depth,undef,
      &    swe_lyr,gamma,ro_layer,melt_flag,T_old,Tf,ro_snow_grid,
-     &    ro_water,xro_snow)
+     &    ro_water,xro_snow,xxx,yyy)
 
 
 c keep track of the accumulated runoff for the dynamic timestep
@@ -1631,6 +1636,7 @@ c total runoff for the set timestep
       runoff = runoff_sumup
 
 c END J.PFLUG
+
       return
       end
 
