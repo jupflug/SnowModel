@@ -1350,7 +1350,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 c Initialize the runoff array.
       runoff = 0.0
-      
+
 c SURFACE SUBLIMATION.
 
 c Whether static-surface (non-blowing snow) sublimation is included
@@ -1560,7 +1560,7 @@ c rebuild the snowpack
 
           enddo
 
-          if (JJ.eq.1.and.swe_lyr(JJ).eq.0.) JJ = 0
+c          if (JJ.eq.1.and.swe_lyr(JJ).eq.0.) JJ = 0
 
 c flux out of the last snow layer goes to runoff
           runoff = runoff + sumup
@@ -1568,6 +1568,7 @@ c flux out of the last snow layer goes to runoff
 c recalculate layer depths
           do j=JJ,1,-1
             dy_snow(j) = swe_lyr(j) * ro_water / ro_layer(j)
+            if (ro_layer(j).eq.0.) JJ = JJ-1
           enddo
 
 c Also take into account the refreezing of this liquid in a cold
