@@ -234,7 +234,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       include 'snowmodel.inc'
 
-      integer iter,icorr_factor_index
+      integer iter,icorr_factor_index,xx,yy
 
       integer JJ,max_layers,multilayer_snowpack
       
@@ -1308,7 +1308,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       include 'snowmodel.inc'
 
-      integer j,JJ
+      integer j,JJ,k
 
       real swe_lyr(nz_max)
       real ro_layer(nz_max)
@@ -1405,13 +1405,15 @@ c Initialize the dynamic timestep iteration
       swe_depth_old = swe_depth
       snow_depth_old = snow_depth
       JJ_old = JJ
-      swe_lyr_old = swe_lyr
-      dy_snow_old = dy_snow
-      ro_layer_old = ro_layer
+      do j=1,JJ
+        swe_lyr_old(j) = swe_lyr(j)
+        dy_snow_old(j) = dy_snow(j)
+        ro_layer_old(j) = ro_layer(j)
+        melt_flag_old(j) = melt_flag(j)
+      enddo
       sum_glacmelt_old = sum_glacmelt
       runoff_old = 0.0
       sum_swemelt_old = sum_swemelt
-      melt_flag_old = melt_flag
 
 c if no convergence, return to this point
 8888  dt_new = dt/iteration
@@ -1530,20 +1532,22 @@ c water content is larger than 0.1 mm
 c increase the timestep and throw message
                 iteration = iteration + 1
 c                if (iteration.eq.2) then
-c                  print *,'employing dynamic timestep for convergence'
+c                print *,'employing dynamic timestep for convergence'
 c                endif
 
 c reinstantiate state variables
                 swe_depth = swe_depth_old
                 snow_depth = snow_depth_old
                 JJ = JJ_old
-                swe_lyr = swe_lyr_old
-                dy_snow = dy_snow_old
-                ro_layer = ro_layer_old
+                do k=1,JJ
+                  swe_lyr(k) = swe_lyr_old(k)
+                  dy_snow(k) = dy_snow_old(k)
+                  ro_layer(k) = ro_layer_old(k)
+                  melt_flag(k) = melt_flag_old(k)
+                enddo
                 sum_glacmelt = sum_glacmelt_old
                 runoff = runoff_old
                 sum_swemelt = sum_swemelt_old
-                melt_flag = melt_flag_old
                 goto 8888
               else
 c if approaching convergence, force to converge
