@@ -17,7 +17,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  ro_snowmax,tsls_threshold,dz_snow_min,tslsnowfall,
      &  change_layer,dy_snow,swe_lyr,ro_layer,T_old,gamma,
      &  multilayer_snowpack,seaice_run,seaice_conc,
-     &  fc_param,t_avg,Saturn)
+     &  fc_param,t_avg)
 
       implicit none
 
@@ -43,7 +43,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real ml_ret(nx_max,ny_max,nz_max)
       real liqfracml(nx_max,ny_max,nz_max)
       real icefracml(nx_max,ny_max,nz_max)
-      real Saturn(nx_max,ny_max,nz_max)
 
       integer melt_flag_z(nz_max)
       real dy_snow_z(nz_max)
@@ -51,8 +50,10 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real ro_layer_z(nz_max)
       real T_old_z(nz_max)
       real gamma_z(nz_max)
+c      real layerFlux_z(nz_max)
       real ml_ret_z(nz_max)
-      real Saturn_z(nz_max)
+c      real liqfrac_z(nz_max)
+c      real icefrac_z(nz_max)
 
       real Tair_grid(nx_max,ny_max)
       real rh_grid(nx_max,ny_max)
@@ -122,7 +123,8 @@ c J.PFLUG
 c variables for multilayer percolation investigation
 c              layerFlux_z(k) = layerFlux(i,j,k)
               ml_ret_z(k) = ml_ret(i,j,k)
-              Saturn_z(k) = Saturn(i,j,k)
+c              liqfrac_z(k) = liqfracml(i,j,k)
+c              icefrac_z(k) = icefracml(i,j,k)
 c END J.PFLUG
             enddo
           endif
@@ -147,8 +149,7 @@ c END J.PFLUG
      &      max_layers,melt_flag_z,ro_snowmax,tsls_threshold,
      &      dz_snow_min,tslsnowfall(i,j),change_layer(i,j),dy_snow_z,
      &      swe_lyr_z,ro_layer_z,T_old_z,gamma_z,multilayer_snowpack,
-     &      Cp_snow,seaice_run,fc_param,t_avg,Cp_water,ml_ret_z,
-     &      Saturn_z)
+     &      Cp_snow,seaice_run,fc_param,t_avg,Cp_water,ml_ret_z)
 
 c Re-build the 3-D arrays.  See note above about using f95 to avoid this.
           if (multilayer_snowpack.eq.1) then
@@ -159,8 +160,10 @@ c Re-build the 3-D arrays.  See note above about using f95 to avoid this.
               ro_layer(i,j,k) = ro_layer_z(k)
               T_old(i,j,k) = T_old_z(k)
               gamma(i,j,k) = gamma_z(k)
+c              layerFlux(i,j,k) = layerFlux_z(k)
               ml_ret(i,j,k) = ml_ret_z(k)
-              Saturn(i,j,k) = Saturn_z(k)
+c              liqfracml(i,j,k) = liqfrac_z(k)
+c              icefracml(i,j,k) = icefrac_z(k)
             enddo
           endif
 
@@ -228,13 +231,13 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  dz_snow_min,tslsnowfall,change_layer,dy_snow,
      &  swe_lyr,ro_layer,T_old,gamma,multilayer_snowpack,
      &  Cp_snow,seaice_run,fc_param,t_avg,
-     &  Cp_water,ml_ret,Saturn)
+     &  Cp_water,ml_ret)
 
       implicit none
 
       include 'snowmodel.inc'
 
-      integer iter,icorr_factor_index,xx,yy
+      integer iter,icorr_factor_index
 
       integer JJ,max_layers,multilayer_snowpack
       
@@ -249,7 +252,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real T_old(nz_max)
       real gamma(nz_max)
       real ml_ret(nz_max)
-      real Saturn(nz_max)
 
       real Twb,Tf,Tair,rh,xLs,Cp,ro_nsnow,dt,ro_snow,swe_depth,
      &  Tsfc,A1,A2,snow_d,ro_water,ro_ice,prec,runoff,Qm,xLf,rain,
@@ -300,7 +302,7 @@ c Call the multi-layer snowpack model.
      &    Qe,sfc_sublim_flag,sum_sfcsublim,soft_snow_d,ro_snow,
      &    sum_sprec,sprec_grnd_ml,sum_prec,prec,sum_runoff,
      &    ro_snow_grid,xro_snow,swesublim,A1,A2,
-     &    fc_param,Cp_water,ml_ret,Saturn)
+     &    fc_param,Cp_water,ml_ret)
 
 c Call the original single-layer snowpack model.
       else
@@ -319,7 +321,6 @@ c   the snowpack depth, density, and snow water equivalent.
      &    sum_swemelt,corr_factor,icorr_factor_index,swesublim,
      &    ro_snowmax)
 
-
 c Post process the data for output.
         CALL POSTPROC(ro_snow_grid,xro_snow,snow_depth,undef)
       endif
@@ -336,7 +337,7 @@ c    &      sum_runoff,canopy_int,swe_depth,sum_glacmelt,iter,
 c    &      snow_d_init,ro_snow,ro_water,sum_sfcsublim)
         endif
       endif
-
+      
       return
       end
 
@@ -540,7 +541,6 @@ c Do the snowpack and canopy store.
         print*,'water imbalance found, iter =',iter,' ',w_balance
         print*,swe_depth_old,swe_depth,prec,runoff,glacier_melt, 
      &    swesublim,canopy_int_old,canopy_int,Qcs
-c        stop
       endif
       return
       end
@@ -972,7 +972,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  Qe,sfc_sublim_flag,sum_sfcsublim,soft_snow_d,ro_snow,
      &  sum_sprec,sprec_grnd_ml,sum_prec,prec,sum_runoff,
      &  ro_snow_grid,xro_snow,swesublim,A1,A2,fc_param,
-     &  Cp_water,ml_ret,Saturn)
+     &  Cp_water,ml_ret)
 
       implicit none
 
@@ -989,7 +989,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real gamma(nz_max)
 
       real ml_ret(nz_max)
-      real Saturn(nz_max)
 
       real Tf,dt,ro_water,ro_ice,Qm,ro_snowmax,rain,xLf,Cp_snow,
      &  runoff,tslsnowfall,ro_nsnow,sprec,Tsfc,tsls_threshold,
@@ -1034,7 +1033,7 @@ c Distribute surface melt and rain precipitation through the snowpack.
      &  change_layer,dz_snow_min,gamma,max_layers,prec,ro_nsnow,
      &  ro_snow,ro_snow_grid,snow_d,sprec_grnd_ml,sum_prec,
      &  sum_runoff,sum_sprec,tsfc,tsls_threshold,tslsnowfall,undef,
-     &  xro_snow,Saturn)
+     &  xro_snow)
      
 c Account for the accumulation of snow precipitation on the snowpack.
 c      CALL PRECIP_ML(JJ,ro_layer,dy_snow,ro_water,tslsnowfall,
@@ -1301,14 +1300,14 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  change_layer,dz_snow_min,gamma,max_layers,prec,ro_nsnow,
      &  ro_snow,ro_snow_grid,snow_d,sprec_grnd_ml,sum_prec,
      &  sum_runoff,sum_sprec,tsfc,tsls_threshold,tslsnowfall,undef,
-     &  xro_snow,Saturn)
+     &  xro_snow)
 
 
       implicit none
 
       include 'snowmodel.inc'
 
-      integer j,JJ,k
+      integer j,JJ
 
       real swe_lyr(nz_max)
       real ro_layer(nz_max)
@@ -1323,7 +1322,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real liqfluxar(nz_max)
       real ml_ret(nz_max)
       real diff(nz_max)
-      real Saturn(nz_max)
 
       real swemelt,extra,ro_water,swe_space,add,runoff,ro_snowmax,
      &  rain,delta_T,xLf,Cp_snow,Tf,dt,Qm,canopy_unload,
@@ -1345,12 +1343,12 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  sum_swemelt_old
       real swe_lyr_old(nz_max),dy_snow_old(nz_max),
      &  ro_layer_old(nz_max),melt_flag_old(nz_max)
-      integer JJ_old,b
+      integer JJ_old,b,k
       real sprec_grnd_ml_new,prec_new,runoff_sumup
 
 c Initialize the runoff array.
       runoff = 0.0
-
+      
 c SURFACE SUBLIMATION.
 
 c Whether static-surface (non-blowing snow) sublimation is included
@@ -1521,7 +1519,7 @@ c input in the liquid flux routine
 
 c determine the unsaturated flux
             CALL SNOWLIQFLX(dt_new,extra,liqfrac(j),icefrac(j),
-     &        liqflux,ml_ret(j),Saturn(j))
+     &        liqflux,ml_ret(j))
 
 c check to see if unstable
 c unstable is defined as fluxes larger than the available water
@@ -1531,9 +1529,9 @@ c water content is larger than 0.1 mm
               if (dt_new.gt.600.and.sumup.gt.0.0001) then
 c increase the timestep and throw message
                 iteration = iteration + 1
-c                if (iteration.eq.2) then
-c                print *,'employing dynamic timestep for convergence'
-c                endif
+                if (iteration.eq.2) then
+                  print *,'employing dynamic timestep for convergence'
+                endif
 
 c reinstantiate state variables
                 swe_depth = swe_depth_old
@@ -1557,14 +1555,10 @@ c if approaching convergence, force to converge
         
 c rebuild the snowpack
             swe_lyr(j) = swe_lyr(j) + sumup - liqflux
-            
-
             ro_layer(j) = swe_lyr(j) * ro_water/dy_snow(j)
             sumup = liqflux
 
           enddo
-
-c          if (JJ.eq.1.and.swe_lyr(JJ).eq.0.) JJ = 0
 
 c flux out of the last snow layer goes to runoff
           runoff = runoff + sumup
@@ -1572,7 +1566,6 @@ c flux out of the last snow layer goes to runoff
 c recalculate layer depths
           do j=JJ,1,-1
             dy_snow(j) = swe_lyr(j) * ro_water / ro_layer(j)
-            if (ro_layer(j).eq.0.) JJ = JJ-1
           enddo
 
 c Also take into account the refreezing of this liquid in a cold
@@ -1641,7 +1634,6 @@ c total runoff for the set timestep
       runoff = runoff_sumup
 
 c END J.PFLUG
-
       return
       end
 
@@ -1769,6 +1761,7 @@ c   are in snow-depth units.  The sum_sprec corrections are done
 c   in the SnowTran-3D code.
       soft_snow_d = soft_snow_d + sprec_grnd_ml * ro_water / ro_snow
       snow_d = swe_depth * ro_water / ro_snow
+c     sum_sprec = sum_sprec + sprec_grnd_ml * ro_water / ro_snow
       sum_sprec = sum_sprec + sprec_grnd_ml
 
 c The following are in swe-depth units.
@@ -2310,11 +2303,10 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       SUBROUTINE SNOWLIQFLX(dt,mLayerVolFracLiqTrial,
      &  liqfrac,icefrac,liqflux,
-     &  mLayerThetaResid,relSaturn)
+     &  mLayerThetaResid)
 
       implicit none
 
-c JPFLUG
 c public variables
 
       real mLayerVolFracLiqTrial,liqfrac,icefrac,liqflux,dt
@@ -2327,6 +2319,9 @@ c public variables
 c compute the pore space. Note that water can fill some of this
 c pore space
         pore_space = 1.0 - icefrac
+       
+c residual water content
+        mLayerThetaResid = x
 
 c compute fluxes
 c check that flow occurs
@@ -2338,6 +2333,13 @@ c compute the available capacity
 c compute the saturated hydraulic conductivity
 c method adapted from Colbeck (1972).
           k_snow = (3.41875e-5)*exp(15.9*(1-icefrac))
+c           mult = x
+c           k_snow = (mult)*exp(15.9*(1-icefrac))
+
+c if grain size is calculated/known, use Shimizu (1970) 
+c relationship
+c          k_snow = (0.00077)*(grain_sz**2)*(9.8/1.787)*
+c     &      exp(-0.0078*mLayerTheta*1000)
          
 c compute the relative saturation
           if (availCap.gt.0.0) then
@@ -2348,16 +2350,21 @@ c compute the relative saturation
           endif
 
 c calculate the flux out of the snowpack or layer
-           liqflux = dt*k_snow*relSaturn**3.0
+c           liqflux = dt*k_snow*relSaturn**3.0
+           mw = 3.0
+           liqflux = dt*k_snow*relSaturn**mw
+c if grain size is known, use the van Genuchten equation
+c           n = (15.68*exp(-0.46*2*grain_sz))+1
+c           m = 1 - (1/n)
+c           liqflux = dt*k_snow*(relSaturn**0.5)*
+c     &       ((1-((1-(relSaturn**(1/m)))**m))**2)
         else
             
 c flow does not occur
           liqflux = 0.0
-          relSaturn = 0.0
 
         endif
 
-c END JPFLUG
       return
       end
 
@@ -2370,7 +2377,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       implicit none
 
-c JPFLUG
       real fracliquid,fc_param,Tf,Tk,mLayerVolFracLiq,
      &  mLayerVolFracIce,iden_ice,mLayerTheta,
      &  ro_water,retent
@@ -2389,7 +2395,6 @@ c calculate volumetric fractions of liquid and ice content
 c calculate the retention
       retent = min(0.02,max(retent,0.75*mLayerVolFracLiq))
 
-c END JPFLUG
       return
       end
 
