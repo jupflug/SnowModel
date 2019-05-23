@@ -18,6 +18,7 @@ c SnowTran-3D variables.
       real windspd_min,tabler_dir,slope_adjust
 
       real topo_land(nx_max,ny_max)
+      real topo_land2(nx_max,ny_max)
       real tabler_nn(nx_max,ny_max)
       real tabler_ss(nx_max,ny_max)
       real tabler_ee(nx_max,ny_max)
@@ -187,7 +188,6 @@ c SnowPack variables.
       real T_old(nx_max,ny_max,nz_max)
       real gamma(nx_max,ny_max,nz_max)
       real layerFlux(nx_max,ny_max,nz_max)
-      real Saturn(nx_max,ny_max,nz_max)
 
       integer iclear_mn,iclear_dy,izero_snow_date
       real xclear_hr
@@ -203,9 +203,15 @@ c Data assimilaion (precipitation and melt) factor variables.
       integer icorr_factor_index(max_time_steps)
 
       integer icorr_factor_loop,irun_data_assim,nobs_dates,
-     & i_dataassim_loop,i_corr_start
+     & i_dataassim_loop,i_corr_start,depth_assim
 c End data assimilaion (precipitation and melt) factor variables.
 
+      real pertPrec
+c SNOWSLIDE routine
+      real accumlayersum(nx_max,ny_max)
+      real accumlayer(nx_max,ny_max)
+      real alldat(nx_max*ny_max,7)
+      real storage(nx_max,ny_max)
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc

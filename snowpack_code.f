@@ -302,7 +302,7 @@ c Call the multi-layer snowpack model.
      &    Qe,sfc_sublim_flag,sum_sfcsublim,soft_snow_d,ro_snow,
      &    sum_sprec,sprec_grnd_ml,sum_prec,prec,sum_runoff,
      &    ro_snow_grid,xro_snow,swesublim,A1,A2,
-     &    fc_param,Cp_water,ml_ret)
+     &    fc_param,Cp_water,ml_ret,icorr_factor_index,corr_factor)
 
 c Call the original single-layer snowpack model.
       else
@@ -972,7 +972,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  Qe,sfc_sublim_flag,sum_sfcsublim,soft_snow_d,ro_snow,
      &  sum_sprec,sprec_grnd_ml,sum_prec,prec,sum_runoff,
      &  ro_snow_grid,xro_snow,swesublim,A1,A2,fc_param,
-     &  Cp_water,ml_ret)
+     &  Cp_water,ml_ret,icorr_factor_index,corr_factor)
 
       implicit none
 
@@ -981,6 +981,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer JJ,max_layers
       integer melt_flag(nz_max)
       integer i,j
+      integer icorr_factor_index
 
       real dy_snow(nz_max)
       real swe_lyr(nz_max)
@@ -996,7 +997,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  canopy_unload,vegtype,glacier_melt,sum_glacmelt,sum_swemelt,
      &  soft_snow_d,Qe,sfc_sublim_flag,sum_sfcsublim,snow_d,
      &  ro_snow,sum_sprec,sprec_grnd_ml,sum_prec,prec,sum_runoff,
-     &  ro_snow_grid,xro_snow,swesublim,A1,A2,Tk,fc_param,Cp_water
+     &  ro_snow_grid,xro_snow,swesublim,A1,A2,Tk,fc_param,Cp_water,
+     &  corr_factor
 
 c THIS IS THE MULTI-LAYER SNOWPACK MODEL.
 
@@ -1033,7 +1035,7 @@ c Distribute surface melt and rain precipitation through the snowpack.
      &  change_layer,dz_snow_min,gamma,max_layers,prec,ro_nsnow,
      &  ro_snow,ro_snow_grid,snow_d,sprec_grnd_ml,sum_prec,
      &  sum_runoff,sum_sprec,tsfc,tsls_threshold,tslsnowfall,undef,
-     &  xro_snow)
+     &  xro_snow,icorr_factor_index,corr_factor)
      
 c Account for the accumulation of snow precipitation on the snowpack.
 c      CALL PRECIP_ML(JJ,ro_layer,dy_snow,ro_water,tslsnowfall,
@@ -1300,7 +1302,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  change_layer,dz_snow_min,gamma,max_layers,prec,ro_nsnow,
      &  ro_snow,ro_snow_grid,snow_d,sprec_grnd_ml,sum_prec,
      &  sum_runoff,sum_sprec,tsfc,tsls_threshold,tslsnowfall,undef,
-     &  xro_snow)
+     &  xro_snow,icorr_factor_index,corr_factor)
 
 
       implicit none
@@ -1345,6 +1347,9 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  ro_layer_old(nz_max),melt_flag_old(nz_max)
       integer JJ_old,b,k
       real sprec_grnd_ml_new,prec_new,runoff_sumup
+
+      integer icorr_factor_index
+      real potmelt_tmp,corr_factor
 
 c Initialize the runoff array.
       runoff = 0.0
@@ -1429,13 +1434,14 @@ c Convert the melt energy to water equivalent melt depth (m).
           potmelt = dt_new * Qm / (ro_water * xLf)
 
 c Account for any snowmelt data assimilation.
-c       if (icorr_factor_index.lt.0.0) then
-c         potmelt_tmp = potmelt * corr_factor
-c         swemelt = min(potmelt_tmp,swe_depth)
+c       if (icorr_factor_index.lt.0.0.and.corr_factor.lt.3.0) then
+       if (icorr_factor_index.lt.0.0) then
+         potmelt_tmp = potmelt * corr_factor
+         swemelt = min(potmelt_tmp,swe_depth)
 c Handle the case of no snowmelt data assimilation.
-c       else
-            swemelt = min(potmelt,swe_depth)
-c       endif
+       else
+         swemelt = min(potmelt,swe_depth)
+       endif
 
 c Compute any glacier or permanent snow-field melt (m water equiv.).
           if (vegtype.eq.20.0) then
@@ -1529,9 +1535,9 @@ c water content is larger than 0.1 mm
               if (dt_new.gt.600.and.sumup.gt.0.0001) then
 c increase the timestep and throw message
                 iteration = iteration + 1
-                if (iteration.eq.2) then
-                  print *,'employing dynamic timestep for convergence'
-                endif
+c                if (iteration.eq.2) then
+c                  print *,'employing dynamic timestep for convergence'
+c                endif
 
 c reinstantiate state variables
                 swe_depth = swe_depth_old
@@ -1713,7 +1719,7 @@ c   otherwise you will not build a new layer on the bare ground.
 
 c Create and/or modify the snow c.v.'s to account for new snowfall.
       if (sprec_grnd_ml.gt.0.0) then
-        if (tslsnowfall.ge.tsls_threshold) then
+        if(tslsnowfall.ge.tsls_threshold.and.sprec_grnd_ml.gt.1e-6) then
 c Create a new layer if snowfall has stopped for a period of time
 c   greater or equal to the defined threshold.
           JJ = JJ + 1
@@ -2321,7 +2327,7 @@ c pore space
         pore_space = 1.0 - icefrac
        
 c residual water content
-        mLayerThetaResid = x
+        mLayerThetaResid = 0.02
 
 c compute fluxes
 c check that flow occurs

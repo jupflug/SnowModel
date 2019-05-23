@@ -20,7 +20,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  gap_frac,cloud_frac_factor,barnes_lg_domain,n_stns_used,
      &  k_stn,xlat_grid,xlon_grid,UTC_flag,icorr_factor_loop,
      &  snowmodel_line_flag,xg_line,yg_line,irun_data_assim,
-     &  wind_lapse_rate,prec_grid_sol)
+     &  wind_lapse_rate,prec_grid_sol,pertPrec)
 
       implicit none
 
@@ -98,7 +98,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  T_lapse_rate,Td_lapse_rate,precip_lapse_rate,
      &  use_shortwave_obs,use_longwave_obs,use_sfc_pressure_obs,
      &  run_enbal,run_snowpack,gap_frac,cloud_frac_factor,
-     &  barnes_lg_domain,UTC_flag,wind_lapse_rate
+     &  barnes_lg_domain,UTC_flag,wind_lapse_rate,pertPrec
 
       integer nftypes
       parameter (nftypes=5)
@@ -130,7 +130,8 @@ c   valid observations to be interpolated.
       call get_obs_data(nstns_orig,Tair_orig,rh_orig,xstn_orig,
      &  ystn_orig,elev_orig,iyear,imonth,iday,xhour,undef,
      &  windspd_orig,winddir_orig,prec_orig,isingle_stn_flag,
-     &  igrads_metfile,iter)
+     &  igrads_metfile,iter,pertPrec,irun_data_assim,
+     &  icorr_factor_loop)
 
 c Make the topographic calculations required by the wind and solar
 c   radiation models.  These calculations are not fixed in time
@@ -247,7 +248,7 @@ c J.PFLUG
       elseif (i_prec_flag.eq.-1) then
 
         call read_frozen(nstns_orig,undef,prec_orig_sol,
-     &    isingle_stn_flag,iter)
+     &    isingle_stn_flag,iter,pertPrec)
 
         call precipitation_froz(nx,ny,deltax,deltay,xmn,ymn,
      &    nstns_orig,xstn_orig,ystn_orig,prec_orig,prec_orig_sol,
@@ -413,7 +414,7 @@ c   snow-water-equivalent per time step.
       Tf = 273.16
       do j=1,ny
         do i=1,nx
-          if (Tair_grid(i,j).le.-2.0+Tf) then
+          if (Tair_grid(i,j).le.-0.5+Tf) then
             if (icorr_factor_index(iter).gt.0.0) then
               prec_grid(i,j) =
      &          corr_factor(i,j,icorr_factor_index(iter)) *
@@ -447,8 +448,6 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       real Tair_grid(nx_max,ny_max)
       real rh_grid(nx_max,ny_max)
-      real Qli_clr(nx_max,ny_max)
-      real Qli_all(nx_max,ny_max)
       real Qli_grid(nx_max,ny_max)
       real topo(nx_max,ny_max)
       real vegtype(nx_max,ny_max)
@@ -456,7 +455,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real T_lapse_rate,Td_lapse_rate,es,e,emiss_cloud,
      &  A,B,C,Tf,Stef_Boltz,cloud_frac,E1,X1,Y1,Z1,E2,X2,Y2,Z2,
      &  Xs,Ys,Zs,forest_frac,E3,X3,Y3,Z3,alfa,calc_subcanopy_met,
-     &  cloud_frac_factor,omeg
+     &  cloud_frac_factor
 
       integer nftypes
       parameter (nftypes=5)
@@ -530,13 +529,13 @@ c Compute Qli following Iziomon et al. (2003).
           endif
 
           alfa = 1.083
-c          alfa = 1.07
           emiss_cloud = alfa *
      &      (1.0 - Xs * exp((- Ys) * e/Tair_grid(i,j))) *
      &      (1.0 + Zs * cloud_frac**2)
           emiss_cloud = min(1.0,emiss_cloud)
-c
+
           Qli_grid(i,j) = emiss_cloud * Stef_Boltz * Tair_grid(i,j)**4
+
 c Modify the incoming longwave radiation for the forest canopy.
           if (vegtype(i,j).le.5.0) then
             if (calc_subcanopy_met.eq.1.0) then
@@ -2000,7 +1999,8 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine get_obs_data(nstns_orig,Tair_orig,rh_orig,xstn_orig,
      &  ystn_orig,elev_orig,iyear,imonth,iday,xhour,undef,
      &  windspd_orig,winddir_orig,prec_orig,isingle_stn_flag,
-     &  igrads_metfile,iter)
+     &  igrads_metfile,iter,pertPrec,irun_data_assim,
+     &  icorr_factor_loop)
 
       implicit none
 
@@ -2012,12 +2012,14 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       integer k,nstns_orig,isingle_stn_flag,igrads_metfile,iter
       integer iyear,imonth,iday
+      real pertPrec,u1,u2,PI,randErr
 
       real Tair_orig(nstns_max),rh_orig(nstns_max)
       real winddir_orig(nstns_max),windspd_orig(nstns_max)
       double precision xstn_orig(nstns_max),ystn_orig(nstns_max)
       real elev_orig(nstns_max),xhour,prec_orig(nstns_max)
       real undef               ! undefined value
+      integer irun_data_assim,icorr_factor_loop
 
       if (isingle_stn_flag.eq.1) then
         nstns_orig = 1
@@ -2033,6 +2035,14 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         print *, 'nstns_orig = ',nstns_orig
         print *
         stop
+      endif
+
+      if (pertPrec.ne.1.0) then
+c generate a normal random number using the box-mueller transformation
+        u1 = rand()
+        u2 = rand()
+c pi as according to maximum precision of compiler
+        PI = 4*atan(1.d0)
       endif
 
       do k=1,nstns_orig
@@ -2062,7 +2072,24 @@ c  the same date.
           stop
         endif
 
+c ADD J.PFLUG
+        if (pertPrec.ne.1.0) then
+c constant perturbation scalar
+          prec_orig(k) = prec_orig(k) * pertPrec
+c          randErr = (prec_orig(k)*.15)*sqrt(-2*log(u1))*cos(2*PI*u2)
+c          if (irun_data_assim.eq.1.and.icorr_factor_loop.eq.1) then
+c            write (11,990) randErr
+c          elseif (irun_data_assim.eq.1.and.icorr_factor_loop.eq.2) then
+c            read (11,*) randErr
+c          endif
+c add random error to precip
+c          prec_orig(k) = prec_orig(k) + randErr
+        endif
+c END J.PFLUG
+
       enddo
+
+  990 format(f6.2)
 
       return
       end
@@ -3234,7 +3261,7 @@ c   the atan2 computation.
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine read_frozen(nstns_orig,undef,prec_orig_sol,
-     &  isingle_stn_flag,iter)
+     &  isingle_stn_flag,iter,pertPrec)
 
       implicit none
 
@@ -3243,6 +3270,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer k,nstns_orig,isingle_stn_flag,iter
       real prec_orig_sol(nstns_max)
       real undef               ! undefined value
+      real pertPrec
 
 
       if (isingle_stn_flag.eq.1) then
@@ -3262,7 +3290,10 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       endif
 
       do k=1,nstns_orig
-          read(99,*) prec_orig_sol(k)
+        read(99,*) prec_orig_sol(k)
+        if (pertPrec.ne.1) then
+          prec_orig_sol(k) = prec_orig_sol(k) * pertPrec
+        endif
       enddo
 
       return
@@ -3326,7 +3357,6 @@ c   terrain.  J. Hydrology, 190, 214-251.
       real topo(nx_max,ny_max)          ! grid topography
       real prec_grid(nx_max,ny_max)     ! output values
       real prec_grid_sol(nx_max,ny_max)
-      real ratio(nstns_max)
       real Tair_grid(nx_max,ny_max)     ! input values
       real sprec(nx_max,ny_max)         ! output values
       real topo_ref_grid(nx_max,ny_max) ! reference surface
@@ -3367,7 +3397,6 @@ c   the grid.
      &  nstns,xstn,ystn,prec,dn,prec_grid,undef,ifill,iobsint,
      &  iyear,imonth,iday,xhour,barnes_lg_domain,n_stns_used,
      &  k_stn,snowmodel_line_flag,xg_line,yg_line)
-
 
       call interpolate(nx,ny,deltax,deltay,xmn,ymn,
      &  nstns,xstn,ystn,prec_snow,dn,prec_grid_sol,undef,ifill,

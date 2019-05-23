@@ -31,7 +31,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  irun_data_assim,izero_snow_date,iclear_mn,iclear_dy,
      &  xclear_hr,dy_snow,swe_lyr,ro_layer,T_old,gamma,icond_flag,
      &  curve_lg_scale_flag,curve_wt_lg,check_met_data,seaice_run,
-     &  snowmodel_line_flag,xg_line,yg_line,print_user)
+     &  snowmodel_line_flag,xg_line,yg_line,print_user,albedo_flag)
 
       implicit none
 
@@ -42,7 +42,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  i_prec_flag,iter,iobs_num,n_stns_used,nveg,iveg_ht_flag,
      &  lat_solar_flag,ihrestart_flag,nstns_orig,i_dataassim_loop,
      &  multilayer_snowpack,max_layers,irun_data_assim,
-     &  izero_snow_date,iclear_mn,iclear_dy,icond_flag
+     &  izero_snow_date,iclear_mn,iclear_dy,icond_flag,albedo_flag
 
       real ro_water,ro_air,gravity,vonKarman,snow_z0,
      &  fetch,xmu,C_z,h_const,wind_min,Up_const,check_met_data,
@@ -290,12 +290,16 @@ c   whether all of the values look like valid numbers.
 c J.PFLUG
 c provide the opportunity to read in snow and rain precipitation data
       if (i_prec_flag.eq.-1.0) then
-        open (99,
-     &    file='met/fp_force.txt',
+        open (99,file='met/TUO_elev_fp.txt',
      &    form='formatted')
         rewind(99)
       endif
 
+      if (albedo_flag.eq.1.0) then
+        open (98,file='extra_met/albedo.dat',
+     &    form='formatted')
+        rewind (98)
+      endif
 c END J.PFLUG
 
 c Fill the the vegetation snow-holding depth array for vegetation
@@ -407,7 +411,7 @@ c   running the multi-layer snow model.
           print *, '  irun_data_assim = 0'
           print *, '  ihrestart_flag = -2'
           print *, '  snow_d_init_const = 0.0'
-          stop
+c          stop
         endif
       endif
 
@@ -670,6 +674,11 @@ c   For Multi-Layer SnowPack.
         open (85,file=multilayer_output_fname,
      &    form='unformatted',access='direct',
      &    recl=4*(4*nx*ny+6*nx*ny*nz_max))
+      endif
+
+c    For random precipitation error
+      if (irun_data_assim.eq.1.and.icorr_factor_loop.eq.1) then
+        open(11,file='data/randomError.txt')
       endif
 
       return
@@ -1221,7 +1230,6 @@ c Build the file name so it includes the interation number.
       write(niter,'(i5.5)') iter
       write(iloop,'(i1.1)') icorr_factor_loop
       fname = name1//niter//name2//iloop//name3
-
 c Save the data.
       open(151,file=fname,
      &  form='unformatted',access='direct',recl=4*nx*ny)
@@ -1240,7 +1248,6 @@ c Save the data.
       write (151,rec=12) ((sum_sprec(i,j),i=1,nx),j=1,ny)
 
       close (151)
-
 c Save a copy that can be used as the initial condition for the
 c   start of the second data assimilation loop.
       if (iter.eq.max_iter) then

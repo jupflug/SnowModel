@@ -8,7 +8,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  Qc,Qm,e_balance,Qf,snow_d,ht_windobs,icond_flag,
      &  albedo,snow_z0,veg_z0,vegtype,undef,albedo_glacier,dy_snow,
      &  T_old,gamma,JJ,prec_grid,albedo_diff,al_max,al_min,al_dec_cold,
-     &  al_dec_melt,dt,sprec,Qp)
+     &  al_dec_melt,dt,sprec,Qp,albedo_flag)
 
       implicit none
 
@@ -36,7 +36,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  albedo_glacier,count_Tsfc_not_converged,albedo_diff,al_max,
      &  al_min,al_dec_cold,al_dec_melt,dt
 
-      integer i,j,nx,ny,icond_flag,k
+      integer i,j,nx,ny,icond_flag,k,albedo_flag
 
       integer JJ(nx_max,ny_max)
       real dy_snow(nx_max,ny_max,nz_max)
@@ -73,7 +73,8 @@ c   not have to do this (I could pass in subsections of the arrays).
      &      icond_flag,albedo(i,j),snow_z0,veg_z0_tmp,vegtype(i,j),
      &      albedo_glacier,dy_snow_z,T_old_z,gamma_z,JJ(i,j),
      &      count_Tsfc_not_converged,prec_grid(i,j),albedo_diff,al_max,
-     &      al_min,al_dec_cold,al_dec_melt,dt,sprec(i,j),Qp(i,j))
+     &      al_min,al_dec_cold,al_dec_melt,dt,sprec(i,j),Qp(i,j),
+     &      albedo_flag)
         enddo
       enddo
 
@@ -108,7 +109,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &    icond_flag,albedo,snow_z0,veg_z0_tmp,vegtype,
      &    albedo_glacier,dy_snow_z,T_old_z,gamma_z,JJ,
      &    count_Tsfc_not_converged,prec,albedo_diff,al_max,al_min,
-     &    al_dec_cold,al_dec_melt,dt,sprec,Qp)
+     &    al_dec_cold,al_dec_melt,dt,sprec,Qp,albedo_flag)
 
 c This is the FORTRAN code which implements the surface energy
 c   balance model used in:
@@ -144,7 +145,7 @@ c   slope and aspect on incoming solar radiation.
      &  prec,albedo_diff,al_max,al_min,al_dec_cold,al_dec_melt,dt,
      &  sprec,Cp_snow,Qp,Twb
 
-      integer icond_flag,JJ
+      integer icond_flag,JJ,albedo_flag
 
       real dy_snow_z(2)
       real T_old_z(2)
@@ -158,7 +159,7 @@ c Define the constants used in the computations.
 c Define the surface characteristics based on the snow conditions.
         CALL GET_SFC(snow_d,albedo,z_0,Tf,Tair,snow_z0,veg_z0_tmp,
      &    vegtype,albedo_glacier,prec,albedo_diff,al_max,al_min,
-     &    al_dec_cold,al_dec_melt,dt,sprec)
+     &    al_dec_cold,al_dec_melt,dt,sprec,albedo_flag)
 
 c Atmospheric vapor pressure from relative humidity data.
         CALL VAPPRESS(ea,rh,Tair,Tf)
@@ -180,7 +181,7 @@ c Solve the energy balance for the surface temperature.
      &    sfc_pressure,ht_windobs,windspd,ro_air,Cp,emiss_sfc,
      &    Stef_Boltz,gravity,xLs,xkappa,z_0,Tf,Qc,
      &    count_Tsfc_not_converged,prec,sprec,Cp_snow,Cp_water,xLf,
-     &    Qp,dt,Twb,JJ)
+     &    Qp,dt,Twb)
 
 c Make sure the snow surface temperature is <= 0 C.
         CALL MELTTEMP(Tsfc,Tf,snow_d,vegtype)
@@ -350,11 +351,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         endif
       endif
 
-c      if (isnan(Qc)) then
-c        JJ = JJ-1
-c        Qc = 0.0
-c      endif
-
       return
       end
 
@@ -484,7 +480,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  sfc_pressure,ht_windobs,windspd,ro_air,Cp,emiss_sfc,
      &  Stef_Boltz,gravity,xLs,xkappa,z_0,Tf,Qc,
      &  count_Tsfc_not_converged,prec,sprec,Cp_snow,Cp_water,xLf,Qp,
-     &  dt,Twb,JJ)
+     &  dt,Twb)
 
       implicit none
 
@@ -493,8 +489,6 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  z_0,Tf,Qc,AAA,CCC,DDD,EEE,FFF,C1,C2,B1,B2,z_0_tmp,
      &  count_Tsfc_not_converged,Qp,prec,sprec,Cp_snow,Cp_water,xLf,
      &  dt,Twb,rainen,snowen
-
-      integer JJ
 
 c J.PFLUG
 c heat advected by rain and snow precipitation is also calculated
@@ -521,7 +515,7 @@ c   computations.
       B2 = C1 * sqrt(C2)
 
       CALL SOLVE(Tsfc,Tair,ea,AAA,CCC,DDD,EEE,FFF,B1,B2,Tf,
-     &  count_Tsfc_not_converged,albedo,Qsi,Qli,Qc,JJ)
+     &  count_Tsfc_not_converged)
 
       return
       end
@@ -530,16 +524,16 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       SUBROUTINE SOLVE(xnew,Tair,ea,AAA,CCC,DDD,EEE,FFF,B1,B2,Tf,
-     &  count_Tsfc_not_converged,albedo,Qsi,Qli,Qc,JJ)
+     &  count_Tsfc_not_converged)
 
       implicit none
 
-      integer maxiter,i,JJ
+      integer maxiter,i
 
       real tol,old,A,B,C,other1,other2,es0,dother1,dother2,xnew,
      &  Tair,ea,AAA,CCC,DDD,EEE,FFF,B1,B2,Tf,B3,stability,
      &  dstability,fprime1,fprime2,fprime3,fprime4,B8,funct,
-     &  fprime,count_Tsfc_not_converged,albedo,Qsi,Qli,Qc
+     &  fprime,count_Tsfc_not_converged
 
       tol = 1.0e-2
       maxiter = 20
@@ -602,7 +596,7 @@ c Neutrally stable case.
      &    FFF*CCC*(ea-es0)*stability +
      &    0.0
         fprime = fprime1 + fprime2 + fprime3 + fprime4
-        
+
         xnew = old - funct/fprime
 
         if (abs(xnew - old).lt.tol) return
@@ -620,12 +614,6 @@ c   time step.
       count_Tsfc_not_converged = count_Tsfc_not_converged + 1.0
 
       xnew = Tair
-
-c      SUBROUTINE SOLVE(xnew,Tair,ea,AAA,CCC,DDD,EEE,FFF,B1,B2,Tf,
-c     &  count_Tsfc_not_converged)
-c      print *,Tair,ea,AAA,CCC,DDD,EEE,FFF,B1,B2,Tf,albedo,Qsi,
-c     &  Qli,Qc,JJ
-
 
       return
       end
@@ -707,7 +695,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       SUBROUTINE GET_SFC(snow_d,albedo,z_0,Tf,Tair,snow_z0,veg_z0_tmp,
      &  vegtype,albedo_glacier,prec,albedo_diff,al_max,al_min,
-     &  al_dec_cold,al_dec_melt,dt,sprec)
+     &  al_dec_cold,al_dec_melt,dt,sprec,albedo_flag)
 
       implicit none
 
@@ -715,6 +703,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  albedo_veg,albedo_glacier,albedo_diff,al_max,al_min,al_dec_cold,
      &  al_dec_melt,prec,dt,tau_1,sprec
 
+      integer albedo_flag
 
 c The code below simulates the TIME-EVOLUTION OF SNOW ALBEDO in
 c   response to precipitation and melt. 
@@ -728,47 +717,56 @@ c   Journal of Hydrometeorology, 5, 723-734.
 c J.PFLUG
 c time evolution altered to mimic what had been done by 
 c Sproles et al. (2013)
-      tau_1 = 86400.
+c If albedo is known for a POINT ONLY, can also explicitly
+c define this
+      if (albedo_flag.eq.0) then
+        tau_1 = 86400.
 
 c In the presence of precipitation, re-initialize the albedo.
-       if (snow_d.gt.0.0) then
-         if (sprec.gt.0.003) albedo = al_max
-       endif
+         if (snow_d.gt.0.0) then
+           if (sprec.gt.0.003) albedo = al_max
+         endif
 
 c evolve the snowpack albedo
 c For existing snowpack at the beginning of the timestep
-      if (snow_d.gt.0.0) then    
+        if (snow_d.gt.0.0) then    
 c define the roughness height
-        z_0 = snow_z0  
+          z_0 = snow_z0  
 c for cold snow conditions
-        if (Tair.le.0.0) then
-          albedo = albedo - (al_dec_cold * dt / tau_1)
-          albedo = max(albedo,al_min)
+          if (Tair.le.0.0) then
+            albedo = albedo - (al_dec_cold * dt / tau_1)
+            albedo = max(albedo,al_min)
 c for melting snow conditions
-        else 
-          albedo = (albedo - al_min) * exp(-al_dec_melt * dt / tau_1)+
-     &      al_min
-        endif
-c scale the albedo if in a forested region
-        if (vegtype.le.5.0) then
-          albedo = albedo - albedo_diff
-        endif
-c snow-free conditions
-      else 
-        if (vegtype.eq.20.0) then
-          z_0 = snow_z0
-          albedo = albedo_glacier
-        else
-          z_0 = veg_z0_tmp
-          if (vegtype.le.5.0) then
-            z_0 = 0.2
-          elseif (vegtype.le.11.0) then
-            z_0 = 0.04
-          else
-            z_0 = 0.02
+          else 
+            albedo = (albedo - al_min) * exp(-al_dec_melt * dt / tau_1)+
+     &        al_min
           endif
-c          albedo = albedo_veg
-          albedo = 0.4
+c scale the albedo if in a forested region
+          if (vegtype.le.5.0) then
+            albedo = albedo - albedo_diff
+          endif
+c snow-free conditions
+        else 
+          if (vegtype.eq.20.0) then
+            z_0 = snow_z0
+            albedo = albedo_glacier
+          else
+            z_0 = veg_z0_tmp
+            if (vegtype.le.5.0) then
+              z_0 = 0.2
+            elseif (vegtype.le.11.0) then
+              z_0 = 0.04
+            else
+              z_0 = 0.02
+            endif
+            albedo = albedo_veg
+          endif
+        endif
+c if point observations of albedo are known
+      else
+        read(98,*) albedo
+        if (snow_d.eq.0.0) then
+         albedo = 0.0
         endif
       endif
 c END J.PFLUG

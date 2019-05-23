@@ -28,7 +28,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  multilayer_output_fname,izero_snow_date,curve_lg_scale_flag,
      &  check_met_data,seaice_run,snowmodel_line_flag,wind_lapse_rate,
      &  albedo_diff,al_max,al_min,al_dec_cold,al_dec_melt,
-     &  fc_param,t_avg)
+     &  fc_param,t_avg,albedo_flag,pertPrec,depth_assim)
 
 c These programs read and process the input parameter data.
 c
@@ -59,7 +59,7 @@ c Put parameter names here:
      &  UTC_flag,tsls_threshold,dz_snow_min,print_multilayer,
      &  curve_lg_scale_flag,check_met_data,seaice_run,
      &  snowmodel_line_flag,wind_lapse_rate,albedo_diff,al_max,
-     &  al_min,al_dec_cold,al_dec_melt,fc_param,t_avg
+     &  al_min,al_dec_cold,al_dec_melt,fc_param,t_avg,pertPrec
 
       real vegsnowdepth(nvegtypes)
       real run_micromet,run_enbal,run_snowpack,run_snowtran,
@@ -67,7 +67,8 @@ c Put parameter names here:
      &  print_user,use_shortwave_obs,use_longwave_obs,
      &  use_sfc_pressure_obs,calc_subcanopy_met,sfc_sublim_flag
 
-      integer nx,ny,max_iter,iprint_inc,icond_flag,irun_data_assim
+      integer nx,ny,max_iter,iprint_inc,icond_flag,irun_data_assim,
+     &  depth_assim
 
       character*80 topoveg_fname,met_input_fname,topo_ascii_fname,
      &  veg_ascii_fname
@@ -81,7 +82,7 @@ c Put parameter names here:
      &  lapse_rate_user_flag,iprecip_lapse_rate_user_flag,
      &  n_stns_used,iveg_ht_flag,lat_solar_flag,ihrestart_inc,
      &  ihrestart_flag,i_dataassim_loop,multilayer_snowpack,max_layers,
-     &  izero_snow_date
+     &  izero_snow_date,albedo_flag
 
       double precision xmn,ymn
       real xhour_init,dn
@@ -95,7 +96,7 @@ c Working parameters.
       integer k,max_par_lines,i_param_chars,i_value_chars,
      &  icomment_flag,npars,ipar_flag
 
-      parameter (npars=108)
+      parameter (npars=111)
       integer ipar_count
       character*40 cpar_name(npars)
 
@@ -504,6 +505,17 @@ c         endif
      &        c_param(1:i_param_chars))
             if (irun_data_assim.ne.0 .and. irun_data_assim.ne.1) then
               print *,'irun_data_assim not 0 or 1'
+              stop
+            endif
+          endif
+
+          if (c_param(1:i_param_chars).eq.'depth_assim') then
+            ipar_count = ipar_count + 1
+            cpar_name(ipar_count) = c_param(1:i_param_chars)
+            call char2int(depth_assim,i_value_chars,c_value,
+     &        c_param(1:i_param_chars))
+            if (depth_assim.ne.0 .and. depth_assim.ne.1) then
+              print *,'depth_assim not 0 or 1'
               stop
             endif
           endif
@@ -1096,6 +1108,17 @@ c ENBAL MODEL SETUP.
           endif
 
 c J.PFLUG
+          if (c_param(1:i_param_chars).eq.'albedo_flag') then
+            ipar_count = ipar_count + 1
+            cpar_name(ipar_count) = c_param(1:i_param_chars)
+            call char2int(albedo_flag,i_value_chars,c_value,
+     &        c_param(1:i_param_chars))
+            print *,albedo_flag
+            if (albedo_flag.ne.0 .and. albedo_flag.ne.1) then
+              print *,'albedo_flag not 0 or 1'
+              stop
+            endif
+          endif
 
           if (c_param(1:i_param_chars).eq.'albedo_diff') then
             ipar_count = ipar_count + 1
@@ -1317,6 +1340,14 @@ c SEAICE MODEL SETUP.
               print *,'seaice_run not 0.0, 1.0, or 2.0'
               stop
             endif
+          endif
+
+c precipitation perturbation
+          if (c_param(1:i_param_chars).eq.'pertPrec') then
+            ipar_count = ipar_count + 1
+            cpar_name(ipar_count) = c_param(1:i_param_chars)
+            call char2real(pertPrec,i_value_chars,c_value,
+     &        c_param(1:i_param_chars))
           endif
 
 c Real example

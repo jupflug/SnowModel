@@ -5,7 +5,8 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       subroutine DATAASSIM_USER(nx,ny,icorr_factor_index,
      &  corr_factor,max_iter,deltax,deltay,xmn,ymn,nobs_dates,
-     &  print_inc,iday_init,imonth_init,iyear_init)
+     &  print_inc,iday_init,imonth_init,iyear_init,depth_assim,
+     &  ihrestart_flag)
 
 c Perform the required correction (precipitation and melt) factor
 c   calculations.  To run the data assimilation routines requires
@@ -64,9 +65,11 @@ c   2, etc.).
       integer icorr_factor_index(max_time_steps)
       integer iobs_rec(max_obs_dates)
       integer nobs_dates,nx,ny,max_iter,local_assim_flag,iday_init,
-     &  imonth_init,iyear_init,nyear,nyears,nobs_total,nobs_total_cfi
+     &  imonth_init,iyear_init,nyear,nyears,nobs_total,nobs_total_cfi,
+     &  ihrestart_flag
+      integer depth_assim
 
-      character*80 fname_swed,fname_sspr,fname_ssmt
+      character*80 fname_swed,fname_sspr,fname_ssmt,fname_sden
       character*80 fname_sweobs
       character*80 fname_sweobs_barnes_mask
 
@@ -77,7 +80,7 @@ c BEGIN USER EDIT SECTION.
 c BEGIN USER EDIT SECTION.
 
 c Define how many years there are in this simulation.
-      nyears = 3
+      nyears = 1
 
 c A single data file describes the observation information that
 c   will be used in the data assimilation.  This file contains the
@@ -138,8 +141,8 @@ c   102 3556.3 25079.3 0.32
 
 c Provide the name of the data file that contains the observed swe
 c   information (as described above).
-c     fname_sweobs = 'data/anwr_traverse_SWE_2013-2015_v1.dat'
-      fname_sweobs = 'data/anwr_traverse_SWE_2013-2015_v2.dat'
+c     fname_sweobs = 'data/Full_pkSWE.txt'
+      fname_sweobs = 'data/SDVEl_X276562.5_pkSWEbl.txt'
 
 c Define the file names of the swe depth (swed), annual summed snow
 c   precipitation (sspr), and annual summed snowmelt (ssmt) outputs
@@ -150,6 +153,7 @@ c   where there is an individual file for each variable.
       fname_swed = 'outputs/wo_assim/swed.gdat'
       fname_sspr = 'outputs/wo_assim/sspr.gdat'
       fname_ssmt = 'outputs/wo_assim/ssmt.gdat'
+      fname_sden = 'outputs/wo_assim/sden.gdat'
 
 c THE PARAMETERS BELOW ARE RARELY CHANGED, UNLESS YOU ARE DOING AN
 c   AREAS ASSIMILATION (INSTEAD OF ASSIMILATING POINT DATA).
@@ -218,14 +222,14 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
 c LOOP THROUGH THE YEARS IN THE SIMULATION.
       do nyear=1,nyears
-
 c Run the data assimilation routines.
         call data_assimilation(nx,ny,deltax,deltay,beta,
      &    areas_flag,sprec_ratio,smelt_ratio,corr_factor,
      &    areas_mask,xmn,ymn,xstn,ystn,nobs_dates,iobs_rec,
      &    local_assim_flag,fname_swed,fname_sspr,fname_ssmt,
      &    fname_sweobs,fname_sweobs_barnes_mask,iday_init,
-     &    imonth_init,iyear_init,nyear,nobs_total)
+     &    imonth_init,iyear_init,nyear,nobs_total,depth_assim,
+     &    fname_sden)
 
 c Build an array indicating the appropriate correction factor to
 c   use at any given time during the simulation.  What this does
@@ -237,7 +241,7 @@ c   in the subroutine above.
         call corr_factor_index(nobs_dates,icorr_factor_index,
      &    iobs_rec,max_iter,sprec_ratio,smelt_ratio,print_inc,
      &    iday_init,imonth_init,iyear_init,nyear,nobs_total_cfi,
-     &    nyears)
+     &    nyears,ihrestart_flag)
 
       enddo
 
@@ -252,24 +256,27 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  areas_mask,xmn,ymn,xstn,ystn,nobs_dates,iobs_rec,
      &  local_assim_flag,fname_swed,fname_sspr,fname_ssmt,
      &  fname_sweobs,fname_sweobs_barnes_mask,iday_init,
-     &  imonth_init,iyear_init,nyear,nobs_total)
+     &  imonth_init,iyear_init,nyear,nobs_total,depth_assim,
+     &  fname_sden)
 
       implicit none
 
       include 'snowmodel.inc'
 
-      real deltax,deltay,undef,dn,beta,areas_flag,swe_count,cf_min
+      real deltax,deltay,undef,dn,beta,areas_flag,swe_count,
+     &  cf_min,ro_avg
       real sprec_ratio(max_obs_dates),smelt_ratio(max_obs_dates)
       real corr_factor(nx_max,ny_max,max_obs_dates)
       real swe_tmp(nx_max,ny_max),sum_sprec_tmp1(nx_max,ny_max),
      &  sum_sprec_tmp2(nx_max,ny_max),grid(nx_max,ny_max),
      &  areas_mask(nx_max,ny_max),sum_smelt_tmp1(nx_max,ny_max),
-     &  sum_smelt_tmp2(nx_max,ny_max)
+     &  sum_smelt_tmp2(nx_max,ny_max),ro_tmp(nx_max,ny_max)
       real corr_factor_tmp(nx_max*ny_max),swe_obs(nx_max*ny_max),
      &  swe_model(nx_max*ny_max),sumsprec_model(nx_max*ny_max),
      &  delta_old(nx_max*ny_max),obsid(nx_max*ny_max),
      &  sumsmelt_model(nx_max*ny_max),obsid_old(nx_max*ny_max),
-     &  delta_old_tmp(nx_max*ny_max)
+     &  delta_old_tmp(nx_max*ny_max),depth_obs(nx_max*ny_max),
+     &  ro_model(nx_max*ny_max)
 c     real corr_offset(nx_max*ny_max)
 
       double precision xmn,ymn
@@ -281,8 +288,9 @@ c     real corr_offset(nx_max*ny_max)
      &  iobsint,k,nstns,nstns_old,kk,local_assim_flag,iiyr,iimo,
      &  iidy,iobs_rec_tmp,iday_init,imonth_init,iyear_init,nyear,
      &  krec,nobs_total
+      integer depth_assim,count
 
-      character*80 fname_swed,fname_sspr,fname_ssmt
+      character*80 fname_swed,fname_sspr,fname_ssmt,fname_sden
       character*80 fname_sweobs
       character*80 fname_sweobs_barnes_mask
 
@@ -345,7 +353,11 @@ c   simulations, xstn, and ystn correspond to the center of the
 c   area domain and they are not really used.
           read(61,*) nstns
           do k=1,nstns
-            read(61,*) obsid(k),xstn(k),ystn(k),swe_obs(k)
+            if (depth_assim.eq.1) then
+              read(61,*) obsid(k),xstn(k),ystn(k),depth_obs(k)
+            else
+              read(61,*) obsid(k),xstn(k),ystn(k),swe_obs(k)
+            endif
           enddo
 
 c Convert the x and y locations to (ii,jj) locations.
@@ -354,6 +366,7 @@ c Convert the x and y locations to (ii,jj) locations.
             jj(k) = 1 + nint((ystn(k) - ymn) / deltay)
           enddo
 
+
 c If you do a data assimilation run from start to finish, it is
 c   not required to close and reopen these files.  But if you are
 c   doing a history restart then these files are no longer open
@@ -361,6 +374,7 @@ c   so you must do this.
           close (238)
           close (239)
           close (240)
+          close (237)
 
 c Open the required inputs from the initial assimilation loop.
 c   Open swe depth (swe_depth).
@@ -375,6 +389,10 @@ c     /outputs/wo_assim/ssmt.gdat is unit 240 in outputs_user.f
      &      form='unformatted',access='direct',recl=4*1*nx*ny)
           open (240,file=fname_ssmt,
      &      form='unformatted',access='direct',recl=4*1*nx*ny)
+          print *,fname_ssmt
+          print *,fname_sden
+          open (237,file=fname_sden,
+     &      form='unformatted',access='direct',recl=4*1*nx*ny)
 
 c Read the model output for the first observation time.
           if (iobs_num.eq.1) then
@@ -382,6 +400,23 @@ c Read the model output for the first observation time.
             read(238,rec=irec1) ((swe_tmp(i,j),i=1,nx),j=1,ny)
             read(239,rec=irec1) ((sum_sprec_tmp1(i,j),i=1,nx),j=1,ny)
             read(240,rec=irec1) ((sum_smelt_tmp1(i,j),i=1,nx),j=1,ny)
+            read(237,rec=irec1) ((ro_tmp(i,j),i=1,nx),j=1,ny)
+
+            count = 0
+            ro_avg = 0
+            do i=1,nx
+              do j=1,ny
+                if (ro_tmp(i,j).ge.0) then
+                  ro_avg = ro_avg + ro_tmp(i,j)
+                  count = count + 1
+                endif
+              enddo
+            enddo
+            if (count.gt.0) ro_avg = ro_avg/count
+              
+c            print *,swe_tmp(1,1), sum_sprec_tmp1(1,1),
+c     &        sum_smelt_tmp1(1,1)
+c            stop
 
 c For points, just pull the data at the appropriate grid cell.
 c   For areas, average the data over the masked out area for each
@@ -389,10 +424,12 @@ c   'station'.
             do k=1,nstns
               if (areas_flag.eq.0.0) then
                 swe_model(k) = swe_tmp(ii(k),jj(k))
+                ro_model(k) = ro_tmp(ii(k),jj(k))
                 sumsprec_model(k) = sum_sprec_tmp1(ii(k),jj(k))
                 sumsmelt_model(k) = sum_smelt_tmp1(ii(k),jj(k))
               elseif (areas_flag.eq.1.0) then
                 swe_model(k) = 0.0
+                ro_model(k) = 0.0
                 sumsprec_model(k) = 0.0
                 sumsmelt_model(k) = 0.0
                 swe_count = 0.0
@@ -403,6 +440,7 @@ c The following is used if the mask changes with observation time.
 c                   if (areas_mask(i,j,iobs_num).eq.obsid(k)) then
                       swe_count = swe_count + 1.0
                       swe_model(k) = swe_model(k) + swe_tmp(i,j)
+                      ro_model(k) = ro_model(k) + ro_tmp(i,j)
                       sumsprec_model(k) = sumsprec_model(k) +
      &                  sum_sprec_tmp1(i,j)
                       sumsmelt_model(k) = sumsmelt_model(k) +
@@ -411,6 +449,7 @@ c                   if (areas_mask(i,j,iobs_num).eq.obsid(k)) then
                   enddo
                 enddo
                 swe_model(k) = swe_model(k) / swe_count
+                ro_model(k) = ro_model(k) / swe_count
                 sumsprec_model(k) = sumsprec_model(k) / swe_count
                 sumsmelt_model(k) = sumsmelt_model(k) / swe_count
               endif
@@ -427,6 +466,19 @@ c   = current obs time, irec2 = previous obs time).
             read(239,rec=irec2) ((sum_sprec_tmp2(i,j),i=1,nx),j=1,ny)
             read(240,rec=irec1) ((sum_smelt_tmp1(i,j),i=1,nx),j=1,ny)
             read(240,rec=irec2) ((sum_smelt_tmp2(i,j),i=1,nx),j=1,ny)
+            read(237,rec=irec1) ((ro_tmp(i,j),i=1,nx),j=1,ny)
+
+            count = 0
+            ro_avg = 0
+            do i=1,nx
+              do j=1,ny
+                if (ro_tmp(i,j).ge.0) then
+                  ro_avg = ro_avg + ro_tmp(i,j)
+                  count = count + 1
+                endif
+              enddo
+            enddo
+            if (count.gt.0) ro_avg = ro_avg/count
 
 c For points, just pull the data at the appropriate grid cell.
 c   For areas, average the data over the masked out area for each
@@ -434,12 +486,14 @@ c   'station'.
             do k=1,nstns
               if (areas_flag.eq.0.0) then
                 swe_model(k) = swe_tmp(ii(k),jj(k))
+                ro_model(k) = ro_tmp(ii(k),jj(k))
                 sumsprec_model(k) = sum_sprec_tmp1(ii(k),jj(k)) -
      &            sum_sprec_tmp2(ii(k),jj(k))
                 sumsmelt_model(k) = sum_smelt_tmp1(ii(k),jj(k)) -
      &            sum_smelt_tmp2(ii(k),jj(k))
               elseif (areas_flag.eq.1.0) then
                 swe_model(k) = 0.0
+                ro_model(k) = 0.0
                 sumsprec_model(k) = 0.0
                 sumsmelt_model(k) = 0.0
                 swe_count = 0.0
@@ -450,6 +504,7 @@ c The following is used if the mask changes with observation time.
 c                   if (areas_mask(i,j,iobs_num).eq.obsid(k)) then
                       swe_count = swe_count + 1.0
                       swe_model(k) = swe_model(k) + swe_tmp(i,j)
+                      ro_model(k) = ro_model(k) + ro_tmp(i,j)
                       sumsprec_model(k) = sumsprec_model(k) +
      &                  sum_sprec_tmp1(i,j) - sum_sprec_tmp2(i,j)
                       sumsmelt_model(k) = sumsmelt_model(k) +
@@ -458,6 +513,7 @@ c                   if (areas_mask(i,j,iobs_num).eq.obsid(k)) then
                   enddo
                 enddo
                 swe_model(k) = swe_model(k) / swe_count
+                ro_model(k) = ro_model(k) / swe_count
                 sumsprec_model(k) = sumsprec_model(k) / swe_count
                 sumsmelt_model(k) = sumsmelt_model(k) / swe_count
               endif
@@ -520,6 +576,13 @@ c   the assimilation (like less than 1 mm), set corr_factor_tmp = 1.0
 c   so no adjustments are performed for this observation interval.
           cf_min = 0.1
           do k=1,nstns
+            if (depth_assim.eq.1) then
+              if (ro_model(k).le.0) then
+                swe_obs(k) = ro_avg*depth_obs(k)/1000.0
+              else
+                swe_obs(k) = ro_model(k)*depth_obs(k)/1000.0
+              endif
+            endif
             if (sprec_ratio(iobs_num).ge.smelt_ratio(iobs_num)) then
               if (sumsprec_model(k).lt.1.0e-3) then
                 corr_factor_tmp(k) = 1.0
@@ -676,6 +739,7 @@ c   iteration.
         close (238)
         close (239)
         close (240)
+        close (237)
 
       else
 
@@ -707,7 +771,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine corr_factor_index(nobs_dates,icorr_factor_index,
      &  iobs_rec,max_iter,sprec_ratio,smelt_ratio,print_inc,
      &  iday_init,imonth_init,iyear_init,nyear,nobs_total_cfi,
-     &  nyears)
+     &  nyears,ihrestart_flag)
 
       implicit none
 
@@ -717,10 +781,12 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       integer kk,istart,iend,nobs_dates,iter,max_iter,krec,nyear,
      &  nobs_total_cfi,ioptn,julian_start,iiyr,julian_end,iday_init,
-     &  imonth_init,iyear_init,nyears
+     &  imonth_init,iyear_init,nyears,ihrestart_flag
       integer iobs_rec(max_obs_dates)
       real sprec_ratio(max_obs_dates),smelt_ratio(max_obs_dates) 
       real print_inc
+
+      if (ihrestart_flag.eq.0) print_inc = 24.0
 
 c Initialize the number-of-observations counter.
       if (nyear.eq.1) nobs_total_cfi = 0
@@ -759,7 +825,6 @@ c   output records to model time steps using print_inc.
 
 c Define the corr_factor data array record.
             krec = nobs_total_cfi + (nyear - 1)
-
 c Fill the index for each model time step.
             do iter=istart,iend
               if (sprec_ratio(kk).ge.smelt_ratio(kk)) then

@@ -26,15 +26,15 @@
 ! Number of x and y cells in the computational grid.
 !!! (recommended default value: nx = user input required)
 !!! (recommended default value: ny = user input required)
-      nx = 50
-      ny = 50
+      nx = 250
+      ny = 250
 
 ! deltax = grid increment in x direction.  Meters.
 ! deltay = grid increment in y direction.  Meters.
 !!! (recommended default value: deltax = user input required)
 !!! (recommended default value: deltay = user input required)
-      deltax = 10.0
-      deltay = 10.0
+      deltax = 25.0
+      deltay = 25.0
 
 ! Location (like UTM, in meters) value of lower-left grid point.
 !   xmn = value of x coordinate in center of lower left grid cell.
@@ -43,8 +43,8 @@
 !     Meters.
 !!! (recommended default value: xmn = user input required)
 !!! (recommended default value: ymn = user input required)
-      xmn = 467945.0
-      ymn = 5310005.0
+      xmn = 275562.5
+      ymn = 4212562.5
 
 ! Model time step, dt.  Should be the same increment as in the input
 !   data file.  In seconds.
@@ -60,7 +60,7 @@
 
 ! Start year of input data file.  Four digit year.  Integer.
 !!! (recommended default value: iyear_init = user input required)
-      iyear_init = 2014
+      iyear_init = 2013
 
 ! Start month of input data file.  One or two digit month.  Integer.
 !!! (recommended default value: imonth_init = user input required)
@@ -68,7 +68,7 @@
 
 ! Start day of input data file.  One or two digit day.  Integer.
 !!! (recommended default value: iday_init = user input required)
-      iday_init = 2
+      iday_init = 1
 
 ! Start hour of input data file.  Local time, like in solar time.
 !   Decimal hour.  Each day the clock runs from 0.00 through 23.99.
@@ -79,9 +79,9 @@
 
 ! Number of model iterations defines how many times to process.
 !!! (recommended default value: max_iter = user input required)
-      max_iter = 16031
-!     max_iter = 16864
-!     max_iter = 128687
+      max_iter = 6552
+!     max_iter = 8760
+!     max_iter = 1440
 
 ! MicroMet requires a met input file that has data in a specific
 !   format (see the MicroMet documentation).  For the case of
@@ -109,7 +109,7 @@
 !   Tair (deg C or K), rh (%), wind speed (m/s), wind direction
 !   (0-360 True N), and precipitation (mm/time_step).
 !!! (recommended default value: met_input_fname = user input required)
-      met_input_fname = met/mm_force.txt
+      met_input_fname = met/TUO_elev_mm.txt
 
 ! The number used as an undefined value for both inputs and outputs.
 !!! (recommended default value: undef = -9999.0)
@@ -127,7 +127,7 @@
 !     for it to point to something that doesn't exist) or you will
 !     an error message.
 !!! (recommended default value: topoveg_fname = xxxxxx)
-      topoveg_fname = met/whol_500mdom_10mres_topo_veg.gdat
+      topoveg_fname = met/TUO_elev_25m_topo_veg.gdat
 
 ! For the case of using ascii text topography and vegetation files,
 !   provide the file names.  Note that if you are using a grads
@@ -162,11 +162,11 @@
 ! 10  erect shrub tundra       0.65  arctic shrubland            shrub
 ! 11  low shrub tundra         0.30  low to medium arctic shrubs shrub
 ! 
-! 12  grassland rangeland      0.15  graminoids and forbs        grass
+! 12  grassland rangeland      0.25  graminoids and forbs        grass
 ! 13  subalpine meadow         0.25  meadows below treeline      grass
-! 14  tundra (non-tussock)     0.15  alpine, high arctic         grass
+! 14  tundra (non-tussock)     0.25  alpine, high arctic         grass
 ! 15  tundra (tussock)         0.20  graminoid and dwarf shrubs  grass
-! 16  prostrate shrub tundra   0.10  graminoid dominated         grass
+! 16  prostrate shrub tundra   0.20  graminoid dominated         grass
 ! 17  arctic gram. wetland     0.20  grassy wetlands, wet tundra grass
 ! 
 ! 18  bare                     0.01                              bare
@@ -192,18 +192,18 @@
 !   vegetation-type data array (veg type 25.0 -> veg_shd_25).  Note
 !   that even if these are not used, they cannot be commented out
 !   or you will get an error message.
-!!! (recommended default value: veg_shd_25 = 0.10)
-!!! (recommended default value: veg_shd_26 = 0.10)
-!!! (recommended default value: veg_shd_27 = 0.10)
-!!! (recommended default value: veg_shd_28 = 0.10)
-!!! (recommended default value: veg_shd_29 = 0.10)
-!!! (recommended default value: veg_shd_30 = 0.10)
-      veg_shd_25 = 0.10
-      veg_shd_26 = 0.10
-      veg_shd_27 = 0.10
-      veg_shd_28 = 0.10
-      veg_shd_29 = 0.10
-      veg_shd_30 = 0.10
+!!! (recommended default value: veg_shd_25 = 0.20)
+!!! (recommended default value: veg_shd_26 = 0.20)
+!!! (recommended default value: veg_shd_27 = 0.20)
+!!! (recommended default value: veg_shd_28 = 0.20)
+!!! (recommended default value: veg_shd_29 = 0.20)
+!!! (recommended default value: veg_shd_30 = 0.20)
+      veg_shd_25 = 0.20
+      veg_shd_26 = 0.20
+      veg_shd_27 = 0.20
+      veg_shd_28 = 0.20
+      veg_shd_29 = 0.20
+      veg_shd_30 = 0.20
 
 ! Define whether the vegetation will be constant or defined by the
 !   topography/vegetation input file name (0.0 means use the file,
@@ -212,7 +212,7 @@
 !   veg_shd that will be used.  The reason you might use a constant
 !   vegetation type is to avoid generating a veg-distribution file.
 !!! (recommended default value: const_veg_flag = 0.0)
-!     const_veg_flag = 15.0
+!     const_veg_flag = 12.0
       const_veg_flag = 0.0
 
 ! For the case where you have vegetation height data, and want to
@@ -238,7 +238,7 @@
 !   to be approximate, since it is used to define some of the solar
 !   radiation calculations.
 !!! (recommended default value: xlat = user input required)
-      xlat = 47.7
+      xlat = 38.1
 
 ! For the case where your domain spans enough latitude that there
 !   is significant variation in solar radiation from the top to
@@ -307,8 +307,15 @@
 !   model with "print_user = 1.0" defined below in this .par file.
 !!! (recommended default value: irun_data_assim = user input
 !!! required)
-      irun_data_assim = 0
-!     irun_data_assim = 1
+!     irun_data_assim = 0
+      irun_data_assim = 1
+
+! Define whether the simulation will be assimilated with snow 
+! depth (depth_assim = 1) instead of SWE (depth_assim = 0). If
+! assimilating snow depth, will used modeled bulk density at that
+! point to derive SWE. Will only be used if irun_data_assim = 1
+      depth_assim = 1
+
 
 ! Define whether want to implement the history restart option.
 !   This creates periodic output files that allow you to restart
@@ -331,10 +338,10 @@
 !   run will start at the begining of the second data assimilation
 !   loop.
 !!! (recommended default value: ihrestart_flag = -2)
-      ihrestart_flag = -2
+!     ihrestart_flag = -2
 !     ihrestart_flag = -1
 !     ihrestart_flag = 3444
-!     ihrestart_flag = 0
+      ihrestart_flag = 0
 
 ! For the case where you are running a history restart, define
 !   whether you want to restart the run during a standard run or
@@ -350,8 +357,8 @@
 !   at the end of that run before going on to the second half of
 !   the assimilation run.
 !!! (recommended default value: i_dataassim_loop = 1)
-      i_dataassim_loop = 1
-!     i_dataassim_loop = -1
+!     i_dataassim_loop = 1
+      i_dataassim_loop = -1
 
 ! If ihrestart_flag = -1, then define how often the restart
 !   files are generated.  This is in iteration units (e.g., every
@@ -368,7 +375,7 @@
 !   at least do a write at the end of the first data assimilation
 !   loop.
 !!! (recommended default value: ihrestart_inc = 0)
-      ihrestart_inc = 0
+      ihrestart_inc = 6552
 
 ! The code is set up to write out an individual data file for each
 !   sub-model (see the sub-model sections below).  In addition, you
@@ -517,8 +524,8 @@
 !   scale that the curvature calculation will be performed on.  This
 !   has units of meters, and should be approximately one-half the
 !   wavelength of the topographic features within the domain.
-!!! (recommended default value: curve_len_scale = 500.0)
-      curve_len_scale = 500.0
+!!! (recommended default value: curve_len_scale = x)
+      curve_len_scale = 200.0
 
 ! The curvature and wind_slope values range between -0.5 and +0.5.
 !   Valid slopewt and curvewt values are between 0 and 1, with
@@ -526,12 +533,12 @@
 !   curvature.  I suggest that slopewt and curvewt be set such
 !   that slopewt + curvewt = 1.0.  This will limit the total
 !   wind weight to between 0.5 and 1.5 (but this is not required).
-!!! (recommended default value: slopewt = 0.58)
+!!! (recommended default value: slopewt = 0.42)
 !!! (recommended default value: curvewt = 0.42)
-      slopewt = 0.58
-      curvewt = 0.42
-!     slopewt = 0.25
-!     curvewt = 0.75
+      slopewt = 0.25
+      curvewt = 0.75
+!     slopewt = x
+!     curvewt = x
 
 ! Impose a second, larger length scale, curvature affect on the
 !   snow distribution.  Turning this flag on (= 1.0) will reduce the
@@ -562,7 +569,7 @@
 !   Note that this implementation currently only defines
 !   average-monthly lapse rates.
 !!! (recommended default value: lapse_rate_user_flag = 0)
-      lapse_rate_user_flag = 1
+      lapse_rate_user_flag = 0
 
 ! Define whether the precipitation adjustment factor, with units of
 !   km^-1 (kind of a precipitation lapse rate, used to adjust the
@@ -596,30 +603,30 @@
 !!! (recommended default value: calc_subcanopy_met = 1.0)
       calc_subcanopy_met = 1.0
 
-! Define the canopy gap fraction (0-1).  This parameter accounts
+! Define the canopy gap fraction (0.2).  This parameter accounts
 !   for solar radiation reaching the snow surface below the canopy,
 !   beyond that defined by the canopy transmissivity calculation.
 !   In effect, it allows additional solar radiation to penetrate
 !   the canopy (e.g., through gaps in the forest), thus inceasing
-!   melt rates, etc.  A gap_frac = 0.0 produces the sub-canopy
+!   melt rates, etc.  A gap_frac = x produces the sub-canopy
 !   solar radiation using the default transmissivity calculation,
 !   a gap_frac = 1.0 (all gaps) produces sub_canopy radiation equal
 !   to the top-of-canopy radiation.  If you want the snow in the
 !   forest to melt faster, increasing this value will do it.
-!!! (recommended default value: gap_frac = 0.2)
-      gap_frac = 0.2
+!!! (recommended default value: gap_frac = x)
+      gap_frac = 0.4
 
 ! To handle the case, for example, of a met station located in
 !   an inversion layer recording high relative humidity, and the
 !   model producing anomolously high cloud-cover fractions, the
 !   cloud_frac_factor can be used to decrease the simulated cloud
 !   fraction.  This number is multiplied by the calculated cloud
-!   fraction.  For example, a cloud_frac_factor = 1.0 produces the
+!   fraction.  For example, a cloud_frac_factor = x produces the
 !   simulated cloud fraction, a cloud_frac_factor = 0.5 produces
 !   the half the simulated cloud fraction, and a cloud_frac_factor
 !   = 0.0 forces the simulated cloud fraction to be zero.
-!!! (recommended default value: cloud_frac_factor = 1.0)
-      cloud_frac_factor = 1.0
+!!! (recommended default value: cloud_frac_factor = x)
+      cloud_frac_factor = 0.9
 
 ! Define whether the simulation will assimilate shortwave radiation
 !   observations (no = 0.0, yes = 1.0).  If yes, the model assumes
@@ -716,7 +723,7 @@
 !!! (recommended default value: tp_scale = 0.9)
       tp_scale = 0.9
 !     tp_scale = 0.5
-!     tp_scale = 0.1
+!     tp_scale = 0.2
 
 ! For subgrid_flag = 1.0, you have to define the dominant wind
 !   direction (one of the 8 primary wind directions) you want
@@ -760,7 +767,7 @@
 !!! (recommended default value: ht_windobs = user input required)
 !!! (recommended default value: ht_rhobs = user input required)
       ht_windobs = 10.0
-      ht_rhobs = 1.5
+      ht_rhobs = 2.0
 
 ! Snow density.  This should be defined to be a typical snow density
 !   for the SnowTran-3D simulations.  The snowpack sub-model will
@@ -799,8 +806,8 @@
 !   icond_flag = 1 requires running the multi-layer snowpack model
 !   with at least 2 snow layers.
 !!! (recommended default value: icond_flag = 0)
-      icond_flag = 0
-!     icond_flag = 1
+!     icond_flag = 0
+      icond_flag = 1
 
 ! Define the albedo for a glacier surface (dry and melting).
 !!! (recommended default value: albedo_glacier = 0.40)
@@ -808,13 +815,19 @@
 
 !J.PFLUG
 
+! Indicate whether the albedo will be read from a file (albedo_flag=1).
+! if so, name the file of albedo observations albedo.dat and place in 
+! the extra_met directory. This is for point simulations only (nx=ny=1) 
+! and requires an observation for each model timestep.
+      albedo_flag = 0
+
 ! Define the difference in albedo between the forest and clear 
 ! areas (the albedo of the snow in the clearing always being larger)
-!!! (recommended default value: albedo_diff = 0.15)
-      albedo_diff = 0.10
+!!! (recommended default value: albedo_diff = 0.25)
+      albedo_diff = 0.0
 
 ! Maximum allowable snow albedo value in the open
-      al_max = 0.84
+      al_max = 0.80
 
 ! Minimum allowable snow albedo value in the open
       al_min = 0.50
@@ -823,7 +836,7 @@
       al_dec_cold = 0.000
 
 ! Albedo decay rate in melting snow conditions (decay/day)
-      al_dec_melt = 0.009
+      al_dec_melt = 0.050
 
 !END J.PFLUG
 
@@ -857,7 +870,7 @@
 ! relates the snow temperature and density to liqiud, ice, and air content. Higher
 ! parameters result in increased ice content and reduced liquid content.
 !!! (values between 10 and 1000. Recommended = 500)
-      fc_param = 19
+      fc_param = 50
 
 ! average temperature of the snowpack.This needs to be defined for single-
 ! layers simulations ONLY.
@@ -874,7 +887,7 @@
 !!! (recommended default value: snowpack_output_fname =
 !!! outputs/snowpack.gdat)
       print_snowpack = 0.0
-      snowpack_output_fname = outputs/x.gdat
+      snowpack_output_fname = outputs/snowpack.gdat
 
 ! Define whether this is going to be a multi-layer snowpack run
 !   (multilayer_snowpack = 1, else 0).  This option does not work
@@ -912,7 +925,7 @@
 !     max_layers = 1
 
 ! Define the minimum snow layer thickness (m) for the multi-layer
-!   snowpack model.  0.001 is an appropriate number.  It is also
+!   snowpack model.  0.0.2 is an appropriate number.  It is also
 !   okay to set this to be 0.0 which will allow the tracking of
 !   thin layers in the simulation.
 !!! (recommended default value: dz_snow_min = 0.001)
@@ -954,3 +967,12 @@
 !!! (recommended default value: seaice_run = 0.0)
      seaice_run = 0.0
 
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Define whether you want to run simulations with a precipitation 
+! perturbation. If perturbation = 1, no perturbation will be applied.
+! Otherwise, value will be used as a scalar multiplier. Note: in 
+! Addition to the scalar multiplier, gaussian random 15% noise will be 
+! applied at each timestep
+     
+     pertPrec = 1

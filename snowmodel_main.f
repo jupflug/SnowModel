@@ -53,7 +53,8 @@ c Read the input parameters.
      &  multilayer_output_fname,izero_snow_date,curve_lg_scale_flag,
      &  check_met_data,seaice_run,snowmodel_line_flag,wind_lapse_rate,
      &  albedo_diff,al_max,al_min,al_dec_cold,al_dec_melt,
-     &  fc_param,t_avg)
+     &  fc_param,t_avg,albedo_flag,pertPrec,depth_assim)
+
 
 c This loop runs the correction/data assimilation adjustment
 c   iterations.
@@ -67,6 +68,7 @@ c   iterations.
         i_corr_start = 1
       endif
 
+c      i_corr_start = 2
       do icorr_factor_loop=i_corr_start,irun_data_assim+1
 
 c Perform the correction (precipitation and melt) factor
@@ -74,11 +76,13 @@ c   calculations.
         if (irun_data_assim.eq.1 .and. icorr_factor_loop.eq.2) then
           CALL DATAASSIM_USER(nx,ny,icorr_factor_index,
      &      corr_factor,max_iter,deltax,deltay,xmn,ymn,nobs_dates,
-     &      print_inc,iday_init,imonth_init,iyear_init)
+     &      print_inc,iday_init,imonth_init,iyear_init,depth_assim,
+     &      ihrestart_flag)
           if (ihrestart_flag.ge.-1) then
             CALL HRESTART_SAVE_DA(nx,ny,max_iter,corr_factor,
      &        icorr_factor_index,nobs_dates)
           endif
+          if (pertPrec.ne.1.0) rewind(11)
         endif
 
 c Perform a variety of preprocessing and model setup steps, like
@@ -109,7 +113,7 @@ c   files, etc.
      &    irun_data_assim,izero_snow_date,iclear_mn,iclear_dy,
      &    xclear_hr,dy_snow,swe_lyr,ro_layer,T_old,gamma,icond_flag,
      &    curve_lg_scale_flag,curve_wt_lg,check_met_data,seaice_run,
-     &    snowmodel_line_flag,xg_line,yg_line,print_user)
+     &    snowmodel_line_flag,xg_line,yg_line,print_user,albedo_flag)
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ccccccccccccccccccccccccc  RUN THE MODEL  cccccccccccccccccccccccccccc
@@ -144,7 +148,7 @@ c Distribute the meteorological station data.
      &        gap_frac,cloud_frac_factor,barnes_lg_domain,n_stns_used,
      &        k_stn,xlat_grid,xlon_grid,UTC_flag,icorr_factor_loop,
      &        snowmodel_line_flag,xg_line,yg_line,irun_data_assim,
-     &        wind_lapse_rate,prec_grid_sol)
+     &        wind_lapse_rate,prec_grid_sol,pertPrec)
             
             if (print_micromet.eq.1.0) then
               if (mod(iter,iprint_inc).eq.0) then
@@ -168,7 +172,7 @@ c Perform a surface energy balance over the domain.
      &        Qc,Qm,e_balance,Qf,snow_d,ht_windobs,icond_flag,
      &        albedo,snow_z0,veg_z0,vegtype,undef,albedo_glacier,
      &        dy_snow,T_old,gamma,JJ,prec_grid,albedo_diff,al_max,
-     &        al_min,al_dec_cold,al_dec_melt,dt,sprec,Qp)
+     &        al_min,al_dec_cold,al_dec_melt,dt,sprec,Qp,albedo_flag)
 
             if (print_enbal.eq.1.0) then
               if (mod(iter,iprint_inc).eq.0) then
@@ -189,6 +193,7 @@ c Perform a surface energy balance over the domain.
 
 c Evolve the snowpack according to the defined melt and
 c   precipitation inputs.
+
           if (run_snowpack.eq.1.0) then
             CALL SNOWPACK_CODE(nx,ny,Tair_grid,rh_grid,ro_nsnow,
      &        dt,swe_depth,Tsfc,snow_d,prec_grid,runoff,Qm,rain,
@@ -204,7 +209,7 @@ c   precipitation inputs.
      &        ro_snowmax,tsls_threshold,dz_snow_min,tslsnowfall,
      &        change_layer,dy_snow,swe_lyr,ro_layer,T_old,gamma,
      &        multilayer_snowpack,seaice_run,seaice_conc,
-     &        fc_param,t_avg,Saturn)
+     &        fc_param,t_avg)
           endif
 
 c Run the blowing-snow model.
@@ -235,6 +240,12 @@ c Run the blowing-snow model.
      &        seaice_run,seaice_conc,tslsnowfall,T_old,tsls_threshold)
           endif
 
+c          CALL SNOWSLIDE_CODE(topo_land,nx,ny,snow_d,topo_land2,
+c     &      terrain_slope,accumlayersum,iter,accumlayer,ro_layer,
+c     &      dy_snow,swe_lyr,JJ,swe_depth,ro_snow_grid,alldat,storage,
+c     &      swe_depth_old)
+
+
 c Save the outputs from the SNOWPACK and SNOWTRAN routines.
           if (run_snowpack.eq.1.0 .and. print_snowpack.eq.1.0) then
             if (mod(iter,iprint_inc).eq.0) then
@@ -246,7 +257,7 @@ c Save the outputs from the SNOWPACK and SNOWTRAN routines.
      &          ((rain(i,j),i=1,nx),j=1,ny),
      &          ((sprec(i,j),i=1,nx),j=1,ny),
      &          ((Qcs(i,j),i=1,nx),j=1,ny),
-     &          ((Tsfc(i,j),i=1,nx),j=1,ny),
+     &          ((canopy_int(i,j),i=1,nx),j=1,ny),
      &          ((sum_Qcs(i,j),i=1,nx),j=1,ny),
      &          ((sum_prec(i,j),i=1,nx),j=1,ny),
      &          ((sum_sprec(i,j),i=1,nx),j=1,ny),
@@ -283,8 +294,7 @@ c   during the simulation.
      &          ((real(JJ(i,j)),i=1,nx),j=1,ny),
      &          ((change_layer(i,j),i=1,nx),j=1,ny),
      &          (((T_old(i,j,k),i=1,nx),j=1,ny),k=1,nz_max),
-c     &          (((gamma(i,j,k),i=1,nx),j=1,ny),k=1,nz_max),
-     &          (((Saturn(i,j,k),i=1,nx),j=1,ny),k=1,nz_max),
+     &          (((gamma(i,j,k),i=1,nx),j=1,ny),k=1,nz_max),
      &          (((ro_layer(i,j,k),i=1,nx),j=1,ny),k=1,nz_max),
      &          (((swe_lyr(i,j,k),i=1,nx),j=1,ny),k=1,nz_max),
      &          (((dy_snow(i,j,k),i=1,nx),j=1,ny),k=1,nz_max),
@@ -322,7 +332,6 @@ c   glaciers from forming.
      &        tslsnowfall,dy_snow,swe_lyr,ro_layer,T_old,sum_sprec,
      &        multilayer_snowpack,tsls_threshold)
           endif
-
 c Save the history restart information.
           if (ihrestart_flag.ge.-1) then
             if (mod(iter,ihrestart_inc).eq.0
