@@ -728,7 +728,6 @@ c In the presence of precipitation, re-initialize the albedo.
           if (vegtype.le.5.0) albedo = albedo - albedo_diff
         endif
 
-        print *,'HERE1',albedo,sprec,snow_d
 c evolve the snowpack albedo
 c For existing snowpack at the beginning of the timestep
         if (snow_d.gt.0.0.or.sprec.gt.0.0) then    
@@ -742,7 +741,6 @@ c for melting snow conditions
           else 
             albedo = (albedo - al_min) * exp(-al_dec_melt * dt / tau_1)+
      &        al_min
-            print *,'HERE2',albedo
           endif
 c snow-free conditions
         else 
@@ -759,7 +757,6 @@ c snow-free conditions
               z_0 = 0.02
             endif
             albedo = albedo_veg
-            print *,albedo
           endif
         endif
 c if point observations of albedo are known
