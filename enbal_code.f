@@ -723,13 +723,15 @@ c define this
         tau_1 = 86400.
 
 c In the presence of precipitation, re-initialize the albedo.
-         if (snow_d.gt.0.0) then
-           if (sprec.gt.0.003) albedo = al_max
-         endif
+        if (sprec.gt.0.0) then
+          albedo = al_max
+          if (vegtype.le.5.0) albedo = albedo - albedo_diff
+        endif
 
+        print *,'HERE1',albedo,sprec,snow_d
 c evolve the snowpack albedo
 c For existing snowpack at the beginning of the timestep
-        if (snow_d.gt.0.0) then    
+        if (snow_d.gt.0.0.or.sprec.gt.0.0) then    
 c define the roughness height
           z_0 = snow_z0  
 c for cold snow conditions
@@ -740,10 +742,7 @@ c for melting snow conditions
           else 
             albedo = (albedo - al_min) * exp(-al_dec_melt * dt / tau_1)+
      &        al_min
-          endif
-c scale the albedo if in a forested region
-          if (vegtype.le.5.0) then
-            albedo = albedo - albedo_diff
+            print *,'HERE2',albedo
           endif
 c snow-free conditions
         else 
@@ -760,6 +759,7 @@ c snow-free conditions
               z_0 = 0.02
             endif
             albedo = albedo_veg
+            print *,albedo
           endif
         endif
 c if point observations of albedo are known
@@ -770,6 +770,7 @@ c if point observations of albedo are known
         endif
       endif
 c END J.PFLUG
+      if (albedo.lt.al_min) albedo=al_min
 
       return
       end
