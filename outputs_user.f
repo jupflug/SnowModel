@@ -167,13 +167,13 @@ c 8 = wdir(i,j) = from uwind_grid(i,j) and vwind_grid(i,j)
 c VALUES SUMMED OVER THE PERIOD.
 c VALUES SUMMED OVER THE PERIOD.
 c  9 = prec(i,j) = prec_grid(i,j)
-      c_var(9)  = 'n'
+      c_var(9)  = 'y'
 
 c 10 = rpre(i,j) = rain(i,j)
-      c_var(10) = 'n'
+      c_var(10) = 'y'
 
 c 11 = spre(i,j) = sprec(i,j)
-      c_var(11) = 'n'
+      c_var(11) = 'y'
 
 c 12 = smlt(i,j) = swemelt(i,j)
       c_var(12) = 'n'
@@ -193,16 +193,16 @@ c 16 = snod(i,j) = snow_depth(i,j)
       c_var(16) = 'y'
 
 c 17 = sden(i,j) = xro_snow(i,j)
-      c_var(17) = 'n'
+      c_var(17) = 'y'
 
 c 18 = swed(i,j) = swe_depth(i,j)
       c_var(18) = 'y'
 
 c 19 = sspr(i,j) = sum_sprec(i,j)
-      c_var(19) = 'n'
+      c_var(19) = 'y'
 
 c 20 = ssmt(i,j) = sum_swemelt(i,j)
-      c_var(20) = 'n'
+      c_var(20) = 'y'
 
 c Note that this data output implementation is currently configured
 c   to mask out the ocean points (vegtype.eq.24.0) if this is a

@@ -142,7 +142,7 @@ c   102 3556.3 25079.3 0.32
 c Provide the name of the data file that contains the observed swe
 c   information (as described above).
 c     fname_sweobs = 'data/Full_pkSWE.txt'
-      fname_sweobs = 'data/SDVEl_X276562.5_pkSWEbl.txt'
+      fname_sweobs = 'data/x.txt'
 
 c Define the file names of the swe depth (swed), annual summed snow
 c   precipitation (sspr), and annual summed snowmelt (ssmt) outputs

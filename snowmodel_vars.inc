@@ -171,7 +171,7 @@ c SnowPack variables.
      &  availCap(nx_max,ny_max),relSaturn(nx_max,ny_max),
      &  mLayerVolFracLiqTrial(nx_max,ny_max)
 
-      real sfc_sublim_flag,fc_param,t_avg
+      real sfc_sublim_flag,fc_param
 
       character*80 snowpack_output_fname,multilayer_output_fname
 
@@ -206,7 +206,6 @@ c Data assimilaion (precipitation and melt) factor variables.
      & i_dataassim_loop,i_corr_start,depth_assim
 c End data assimilaion (precipitation and melt) factor variables.
 
-      real pertPrec
 c SNOWSLIDE routine
       real accumlayersum(nx_max,ny_max)
       real accumlayer(nx_max,ny_max)

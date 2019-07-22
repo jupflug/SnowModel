@@ -290,7 +290,7 @@ c   whether all of the values look like valid numbers.
 c J.PFLUG
 c provide the opportunity to read in snow and rain precipitation data
       if (i_prec_flag.eq.-1.0) then
-        open (99,file='met/TUO_elev_fp.txt',
+        open (99,file='met/TUO_wind_fp.txt',
      &    form='formatted')
         rewind(99)
       endif

@@ -53,7 +53,7 @@ c Read the input parameters.
      &  multilayer_output_fname,izero_snow_date,curve_lg_scale_flag,
      &  check_met_data,seaice_run,snowmodel_line_flag,wind_lapse_rate,
      &  albedo_diff,al_max,al_min,al_dec_cold,al_dec_melt,
-     &  fc_param,t_avg,albedo_flag,pertPrec,depth_assim)
+     &  fc_param,albedo_flag,depth_assim)
 
 
 c This loop runs the correction/data assimilation adjustment
@@ -82,7 +82,6 @@ c   calculations.
             CALL HRESTART_SAVE_DA(nx,ny,max_iter,corr_factor,
      &        icorr_factor_index,nobs_dates)
           endif
-          if (pertPrec.ne.1.0) rewind(11)
         endif
 
 c Perform a variety of preprocessing and model setup steps, like
@@ -148,7 +147,7 @@ c Distribute the meteorological station data.
      &        gap_frac,cloud_frac_factor,barnes_lg_domain,n_stns_used,
      &        k_stn,xlat_grid,xlon_grid,UTC_flag,icorr_factor_loop,
      &        snowmodel_line_flag,xg_line,yg_line,irun_data_assim,
-     &        wind_lapse_rate,prec_grid_sol,pertPrec)
+     &        wind_lapse_rate,prec_grid_sol)
             
             if (print_micromet.eq.1.0) then
               if (mod(iter,iprint_inc).eq.0) then
@@ -209,7 +208,7 @@ c   precipitation inputs.
      &        ro_snowmax,tsls_threshold,dz_snow_min,tslsnowfall,
      &        change_layer,dy_snow,swe_lyr,ro_layer,T_old,gamma,
      &        multilayer_snowpack,seaice_run,seaice_conc,
-     &        fc_param,t_avg)
+     &        fc_param)
           endif
 
 c Run the blowing-snow model.

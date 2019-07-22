@@ -26,15 +26,15 @@
 ! Number of x and y cells in the computational grid.
 !!! (recommended default value: nx = user input required)
 !!! (recommended default value: ny = user input required)
-      nx = 250
-      ny = 250
+      nx = 1
+      ny = 1
 
 ! deltax = grid increment in x direction.  Meters.
 ! deltay = grid increment in y direction.  Meters.
 !!! (recommended default value: deltax = user input required)
 !!! (recommended default value: deltay = user input required)
-      deltax = 25.0
-      deltay = 25.0
+      deltax = 5.0
+      deltay = 5.0
 
 ! Location (like UTM, in meters) value of lower-left grid point.
 !   xmn = value of x coordinate in center of lower left grid cell.
@@ -43,8 +43,8 @@
 !     Meters.
 !!! (recommended default value: xmn = user input required)
 !!! (recommended default value: ymn = user input required)
-      xmn = 275562.5
-      ymn = 4212562.5
+      xmn = 301522.5
+      ymn = 4196692.5
 
 ! Model time step, dt.  Should be the same increment as in the input
 !   data file.  In seconds.
@@ -79,8 +79,8 @@
 
 ! Number of model iterations defines how many times to process.
 !!! (recommended default value: max_iter = user input required)
-      max_iter = 6552
-!     max_iter = 8760
+!     max_iter = 6552
+      max_iter = 9360
 !     max_iter = 1440
 
 ! MicroMet requires a met input file that has data in a specific
@@ -109,7 +109,7 @@
 !   Tair (deg C or K), rh (%), wind speed (m/s), wind direction
 !   (0-360 True N), and precipitation (mm/time_step).
 !!! (recommended default value: met_input_fname = user input required)
-      met_input_fname = met/TUO_elev_mm.txt
+      met_input_fname = met/TUO_DANA_mm.txt
 
 ! The number used as an undefined value for both inputs and outputs.
 !!! (recommended default value: undef = -9999.0)
@@ -127,7 +127,7 @@
 !     for it to point to something that doesn't exist) or you will
 !     an error message.
 !!! (recommended default value: topoveg_fname = xxxxxx)
-      topoveg_fname = met/TUO_elev_25m_topo_veg.gdat
+      topoveg_fname = met/DANA_5m_topo_veg.gdat
 
 ! For the case of using ascii text topography and vegetation files,
 !   provide the file names.  Note that if you are using a grads
@@ -238,7 +238,7 @@
 !   to be approximate, since it is used to define some of the solar
 !   radiation calculations.
 !!! (recommended default value: xlat = user input required)
-      xlat = 38.1
+      xlat = 37.9
 
 ! For the case where your domain spans enough latitude that there
 !   is significant variation in solar radiation from the top to
@@ -307,14 +307,14 @@
 !   model with "print_user = 1.0" defined below in this .par file.
 !!! (recommended default value: irun_data_assim = user input
 !!! required)
-!     irun_data_assim = 0
-      irun_data_assim = 1
+!     irun_data_assim = 1
+      irun_data_assim = 0
 
 ! Define whether the simulation will be assimilated with snow 
 ! depth (depth_assim = 1) instead of SWE (depth_assim = 0). If
 ! assimilating snow depth, will used modeled bulk density at that
 ! point to derive SWE. Will only be used if irun_data_assim = 1
-      depth_assim = 1
+      depth_assim = 0
 
 
 ! Define whether want to implement the history restart option.
@@ -338,10 +338,10 @@
 !   run will start at the begining of the second data assimilation
 !   loop.
 !!! (recommended default value: ihrestart_flag = -2)
-!     ihrestart_flag = -2
+      ihrestart_flag = -2
 !     ihrestart_flag = -1
 !     ihrestart_flag = 3444
-      ihrestart_flag = 0
+!     ihrestart_flag = 0
 
 ! For the case where you are running a history restart, define
 !   whether you want to restart the run during a standard run or
@@ -357,8 +357,8 @@
 !   at the end of that run before going on to the second half of
 !   the assimilation run.
 !!! (recommended default value: i_dataassim_loop = 1)
-!     i_dataassim_loop = 1
-      i_dataassim_loop = -1
+      i_dataassim_loop = 1
+!     i_dataassim_loop = -1
 
 ! If ihrestart_flag = -1, then define how often the restart
 !   files are generated.  This is in iteration units (e.g., every
@@ -375,7 +375,7 @@
 !   at least do a write at the end of the first data assimilation
 !   loop.
 !!! (recommended default value: ihrestart_inc = 0)
-      ihrestart_inc = 6552
+      ihrestart_inc = 0
 
 ! The code is set up to write out an individual data file for each
 !   sub-model (see the sub-model sections below).  In addition, you
@@ -426,7 +426,7 @@
       i_wind_flag = 1
       i_solar_flag = 1
       i_longwave_flag = 1
-      i_prec_flag = -1
+      i_prec_flag = 1
 ! END J.PFLUG
 
 ! Force the model to determine a value for every grid cell (= 1), or
@@ -824,7 +824,7 @@
 ! Define the difference in albedo between the forest and clear 
 ! areas (the albedo of the snow in the clearing always being larger)
 !!! (recommended default value: albedo_diff = 0.25)
-      albedo_diff = 0.0
+      albedo_diff = 0.15
 
 ! Maximum allowable snow albedo value in the open
       al_max = 0.80
@@ -833,10 +833,10 @@
       al_min = 0.50
 
 ! Albedo decay rate in cold snow conditions (decay/day)
-      al_dec_cold = 0.000
+      al_dec_cold = 0.008
 
 ! Albedo decay rate in melting snow conditions (decay/day)
-      al_dec_melt = 0.050
+      al_dec_melt = 0.240
 
 !END J.PFLUG
 
@@ -871,11 +871,6 @@
 ! parameters result in increased ice content and reduced liquid content.
 !!! (values between 10 and 1000. Recommended = 500)
       fc_param = 50
-
-! average temperature of the snowpack.This needs to be defined for single-
-! layers simulations ONLY.
-!!! (recommended: maritime: t_avg = 273.16)
-      t_avg = 273.16
 
 ! END J.PFLUG
 
@@ -966,13 +961,3 @@
 !   and sea-ice run, seaice_run = 2.0.
 !!! (recommended default value: seaice_run = 0.0)
      seaice_run = 0.0
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-! Define whether you want to run simulations with a precipitation 
-! perturbation. If perturbation = 1, no perturbation will be applied.
-! Otherwise, value will be used as a scalar multiplier. Note: in 
-! Addition to the scalar multiplier, gaussian random 15% noise will be 
-! applied at each timestep
-     
-     pertPrec = 1

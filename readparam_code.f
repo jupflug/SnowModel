@@ -28,7 +28,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  multilayer_output_fname,izero_snow_date,curve_lg_scale_flag,
      &  check_met_data,seaice_run,snowmodel_line_flag,wind_lapse_rate,
      &  albedo_diff,al_max,al_min,al_dec_cold,al_dec_melt,
-     &  fc_param,t_avg,albedo_flag,pertPrec,depth_assim)
+     &  fc_param,albedo_flag,depth_assim)
 
 c These programs read and process the input parameter data.
 c
@@ -59,7 +59,7 @@ c Put parameter names here:
      &  UTC_flag,tsls_threshold,dz_snow_min,print_multilayer,
      &  curve_lg_scale_flag,check_met_data,seaice_run,
      &  snowmodel_line_flag,wind_lapse_rate,albedo_diff,al_max,
-     &  al_min,al_dec_cold,al_dec_melt,fc_param,t_avg,pertPrec
+     &  al_min,al_dec_cold,al_dec_melt,fc_param
 
       real vegsnowdepth(nvegtypes)
       real run_micromet,run_enbal,run_snowpack,run_snowtran,
@@ -96,7 +96,7 @@ c Working parameters.
       integer k,max_par_lines,i_param_chars,i_value_chars,
      &  icomment_flag,npars,ipar_flag
 
-      parameter (npars=111)
+      parameter (npars=109)
       integer ipar_count
       character*40 cpar_name(npars)
 
@@ -1221,16 +1221,6 @@ c J.PFLUG
           endif
 
 
-          if (c_param(1:i_param_chars).eq.'t_avg') then
-            ipar_count = ipar_count + 1
-            cpar_name(ipar_count) = c_param(1:i_param_chars)
-            call char2real(t_avg,i_value_chars,c_value,
-     &        c_param(1:i_param_chars))
-            if (t_avg.lt.250.0 .or. t_avg.gt.273.2) then
-              print *,'t_avg out of range'
-              stop
-            endif
-          endif
 c END J.PFLUG
 
           if (c_param(1:i_param_chars).eq.'print_snowpack') then
@@ -1340,14 +1330,6 @@ c SEAICE MODEL SETUP.
               print *,'seaice_run not 0.0, 1.0, or 2.0'
               stop
             endif
-          endif
-
-c precipitation perturbation
-          if (c_param(1:i_param_chars).eq.'pertPrec') then
-            ipar_count = ipar_count + 1
-            cpar_name(ipar_count) = c_param(1:i_param_chars)
-            call char2real(pertPrec,i_value_chars,c_value,
-     &        c_param(1:i_param_chars))
           endif
 
 c Real example
