@@ -2322,8 +2322,10 @@ c compute the pore space. Note that water can fill some of this
 c pore space
         pore_space = 1.0 - icefrac
        
+c can also choose to define here if not expliclty resolving
+c or being defined in UPDATE_STATE
 c residual water content
-        mLayerThetaResid = 0.02
+c        mLayerThetaResid = 0.02
 
 c compute fluxes
 c check that flow occurs
