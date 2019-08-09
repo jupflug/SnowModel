@@ -2327,7 +2327,7 @@ c residual water content
 
 c compute fluxes
 c check that flow occurs
-        if(mLayerVolFracLiqTrial>mLayerThetaResid)then
+        if(mLayerVolFracLiqTrial.gt.mLayerThetaResid)then
 
 c compute the available capacity
           availCap = pore_space - mLayerThetaResid
@@ -2395,7 +2395,11 @@ c calculate volumetric fractions of liquid and ice content
      &  (ro_water/iden_ice)
 
 c calculate the retention
-      retent = min(0.02,max(retent,0.75*mLayerVolFracLiq))
+c     use this if wanting to explicitly track through time
+c     will likely need to output to snowmodel_main to track evolution
+c      retent = min(0.02,max(retent,0.75*mLayerVolFracLiq))
+c     else use parameterized value
+      retent = 0.02
 
       return
       end
