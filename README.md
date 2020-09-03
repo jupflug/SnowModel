@@ -13,3 +13,8 @@
 * Move all files except snowmodel.par in a directory named /code
 * Organize forcing, outputs, and supplementary data as directed by snowmodel.par
 * Use the compiler (pgf77, gfortran, g77, f77, etc.) of choice to compile and run SnowModel 
+
+###### Sources
+* Liston, G.E. and Elder, K.,2006. A Distributed Snow-Evolution Modeling System (SnowModel). J. Hydrometeor. 7, 1259-1276.
+* Pflug, J.M., Liston, G.E., Nijssen, B., Lundquist J.D., 2019. Testing Model Representations of Snowpack Liquid Water Percolation Across Multiple Climates. Water Resources Research. 55(6), 4820-4838.
+
