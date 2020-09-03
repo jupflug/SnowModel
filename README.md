@@ -8,3 +8,6 @@
 
 ## Getting started
 * Download or clone this repository
+* Move all files except snowmodel.par in a directory named /code
+* Organize forcing, outputs, and supplementary data as directed by snowmodel.par
+* Use the compiler (pgf77, gfortran, g77, f77, etc.) of choice to compile and run SnowModel 
