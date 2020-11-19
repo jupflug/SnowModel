@@ -17,7 +17,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  ro_snowmax,tsls_threshold,dz_snow_min,tslsnowfall,
      &  change_layer,dy_snow,swe_lyr,ro_layer,T_old,gamma,
      &  multilayer_snowpack,seaice_run,seaice_conc,
-     &  fc_param)
+     &  fc_param,t_avg)
 
       implicit none
 
@@ -30,7 +30,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer melt_flag(nx_max,ny_max,nz_max)
 
       real ro_snowmax,tsls_threshold,dz_snow_min,Cp_snow,
-     &  fc_param
+     &  fc_param,t_avg
       real tslsnowfall(nx_max,ny_max)
       real change_layer(nx_max,ny_max)
       real dy_snow(nx_max,ny_max,nz_max)
@@ -50,7 +50,10 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       real ro_layer_z(nz_max)
       real T_old_z(nz_max)
       real gamma_z(nz_max)
+c      real layerFlux_z(nz_max)
       real ml_ret_z(nz_max)
+c      real liqfrac_z(nz_max)
+c      real icefrac_z(nz_max)
 
       real Tair_grid(nx_max,ny_max)
       real rh_grid(nx_max,ny_max)
@@ -146,7 +149,7 @@ c END J.PFLUG
      &      max_layers,melt_flag_z,ro_snowmax,tsls_threshold,
      &      dz_snow_min,tslsnowfall(i,j),change_layer(i,j),dy_snow_z,
      &      swe_lyr_z,ro_layer_z,T_old_z,gamma_z,multilayer_snowpack,
-     &      Cp_snow,seaice_run,fc_param,Cp_water,ml_ret_z)
+     &      Cp_snow,seaice_run,fc_param,t_avg,Cp_water,ml_ret_z)
 
 c Re-build the 3-D arrays.  See note above about using f95 to avoid this.
           if (multilayer_snowpack.eq.1) then
@@ -227,7 +230,8 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  max_layers,melt_flag,ro_snowmax,tsls_threshold,
      &  dz_snow_min,tslsnowfall,change_layer,dy_snow,
      &  swe_lyr,ro_layer,T_old,gamma,multilayer_snowpack,
-     &  Cp_snow,seaice_run,fc_param,Cp_water,ml_ret)
+     &  Cp_snow,seaice_run,fc_param,t_avg,
+     &  Cp_water,ml_ret)
 
       implicit none
 
@@ -259,7 +263,7 @@ cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  sum_d_canopy_int,snow_d_init,Qe,sfc_sublim_flag,
      &  sum_sfcsublim,sum_swemelt,corr_factor,swesublim,
      &  swe_depth_old,canopy_int_old,sprec_grnd_ml,seaice_run,
-     &  mLayerVolFracLiqTrial,fc_param
+     &  mLayerVolFracLiqTrial,fc_param,t_avg
 
       integer nftypes
       parameter (nftypes=5)
@@ -2322,14 +2326,12 @@ c compute the pore space. Note that water can fill some of this
 c pore space
         pore_space = 1.0 - icefrac
        
-c can also choose to define here if not expliclty resolving
-c or being defined in UPDATE_STATE
 c residual water content
-c        mLayerThetaResid = 0.02
+        mLayerThetaResid = 0.02
 
 c compute fluxes
 c check that flow occurs
-        if(mLayerVolFracLiqTrial.gt.mLayerThetaResid)then
+        if(mLayerVolFracLiqTrial>mLayerThetaResid)then
 
 c compute the available capacity
           availCap = pore_space - mLayerThetaResid
@@ -2397,11 +2399,7 @@ c calculate volumetric fractions of liquid and ice content
      &  (ro_water/iden_ice)
 
 c calculate the retention
-c     use this if wanting to explicitly track through time
-c     will likely need to output to snowmodel_main to track evolution
-c      retent = min(0.02,max(retent,0.75*mLayerVolFracLiq))
-c     else use parameterized value
-      retent = 0.02
+      retent = min(0.02,max(retent,0.75*mLayerVolFracLiq))
 
       return
       end

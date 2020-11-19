@@ -28,7 +28,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  multilayer_output_fname,izero_snow_date,curve_lg_scale_flag,
      &  check_met_data,seaice_run,snowmodel_line_flag,wind_lapse_rate,
      &  albedo_diff,al_max,al_min,al_dec_cold,al_dec_melt,
-     &  fc_param,albedo_flag,depth_assim)
+     &  fc_param,t_avg,albedo_flag,pertPrec,depth_assim,prec_file_flag)
 
 c These programs read and process the input parameter data.
 c
@@ -59,7 +59,7 @@ c Put parameter names here:
      &  UTC_flag,tsls_threshold,dz_snow_min,print_multilayer,
      &  curve_lg_scale_flag,check_met_data,seaice_run,
      &  snowmodel_line_flag,wind_lapse_rate,albedo_diff,al_max,
-     &  al_min,al_dec_cold,al_dec_melt,fc_param
+     &  al_min,al_dec_cold,al_dec_melt,fc_param,t_avg,pertPrec
 
       real vegsnowdepth(nvegtypes)
       real run_micromet,run_enbal,run_snowpack,run_snowtran,
@@ -82,7 +82,7 @@ c Put parameter names here:
      &  lapse_rate_user_flag,iprecip_lapse_rate_user_flag,
      &  n_stns_used,iveg_ht_flag,lat_solar_flag,ihrestart_inc,
      &  ihrestart_flag,i_dataassim_loop,multilayer_snowpack,max_layers,
-     &  izero_snow_date,albedo_flag
+     &  izero_snow_date,albedo_flag,prec_file_flag
 
       double precision xmn,ymn
       real xhour_init,dn
@@ -96,7 +96,7 @@ c Working parameters.
       integer k,max_par_lines,i_param_chars,i_value_chars,
      &  icomment_flag,npars,ipar_flag
 
-      parameter (npars=109)
+      parameter (npars=112)
       integer ipar_count
       character*40 cpar_name(npars)
 
@@ -642,6 +642,17 @@ c J.PFLUG
             if (i_prec_flag.ne.0 .and. i_prec_flag.ne.1 .and.
      &        i_prec_flag.ne.-1) then
               print *,'i_prec_flag not 0,1,or -1'
+              stop
+            endif
+          endif
+
+          if (c_param(1:i_param_chars).eq.'prec_file_flag') then
+            ipar_count = ipar_count + 1
+            cpar_name(ipar_count) = c_param(1:i_param_chars)
+            call char2int(prec_file_flag,i_value_chars,c_value,
+     &        c_param(1:i_param_chars))
+            if (prec_file_flag.ne.0 .and. prec_file_flag.ne.1) then
+              print *,'prec_file_flag not 0 or 1'
               stop
             endif
           endif
@@ -1221,6 +1232,16 @@ c J.PFLUG
           endif
 
 
+          if (c_param(1:i_param_chars).eq.'t_avg') then
+            ipar_count = ipar_count + 1
+            cpar_name(ipar_count) = c_param(1:i_param_chars)
+            call char2real(t_avg,i_value_chars,c_value,
+     &        c_param(1:i_param_chars))
+            if (t_avg.lt.250.0 .or. t_avg.gt.273.2) then
+              print *,'t_avg out of range'
+              stop
+            endif
+          endif
 c END J.PFLUG
 
           if (c_param(1:i_param_chars).eq.'print_snowpack') then
@@ -1330,6 +1351,14 @@ c SEAICE MODEL SETUP.
               print *,'seaice_run not 0.0, 1.0, or 2.0'
               stop
             endif
+          endif
+
+c precipitation perturbation
+          if (c_param(1:i_param_chars).eq.'pertPrec') then
+            ipar_count = ipar_count + 1
+            cpar_name(ipar_count) = c_param(1:i_param_chars)
+            call char2real(pertPrec,i_value_chars,c_value,
+     &        c_param(1:i_param_chars))
           endif
 
 c Real example

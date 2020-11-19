@@ -31,7 +31,8 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  irun_data_assim,izero_snow_date,iclear_mn,iclear_dy,
      &  xclear_hr,dy_snow,swe_lyr,ro_layer,T_old,gamma,icond_flag,
      &  curve_lg_scale_flag,curve_wt_lg,check_met_data,seaice_run,
-     &  snowmodel_line_flag,xg_line,yg_line,print_user,albedo_flag)
+     &  snowmodel_line_flag,xg_line,yg_line,print_user,albedo_flag,
+     &  prec_file_flag)
 
       implicit none
 
@@ -42,7 +43,8 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  i_prec_flag,iter,iobs_num,n_stns_used,nveg,iveg_ht_flag,
      &  lat_solar_flag,ihrestart_flag,nstns_orig,i_dataassim_loop,
      &  multilayer_snowpack,max_layers,irun_data_assim,
-     &  izero_snow_date,iclear_mn,iclear_dy,icond_flag,albedo_flag
+     &  izero_snow_date,iclear_mn,iclear_dy,icond_flag,albedo_flag,
+     &  prec_file_flag
 
       real ro_water,ro_air,gravity,vonKarman,snow_z0,
      &  fetch,xmu,C_z,h_const,wind_min,Up_const,check_met_data,
@@ -290,7 +292,7 @@ c   whether all of the values look like valid numbers.
 c J.PFLUG
 c provide the opportunity to read in snow and rain precipitation data
       if (i_prec_flag.eq.-1.0) then
-        open (99,file='met/TUO_wind_fp.txt',
+        open (99,file='met/TUO_elev_fp.txt',
      &    form='formatted')
         rewind(99)
       endif
@@ -299,6 +301,12 @@ c provide the opportunity to read in snow and rain precipitation data
         open (98,file='extra_met/albedo.dat',
      &    form='formatted')
         rewind (98)
+      endif
+
+      if (prec_file_flag.eq.1.0) then
+        open (97,file='x.gdat',
+     &    form='unformatted',access='direct',
+     &    recl=4*nx*ny*2)
       endif
 c END J.PFLUG
 
@@ -642,7 +650,7 @@ c   file to the restart time.
 c Open the files to be used to store model output.
 c   For MicroMet.
       if (run_micromet.eq.1.0 .and. print_micromet.eq.1.0) then
-        n_recs_out = 8
+        n_recs_out = 2
         open (81,file=micromet_output_fname,
      &    form='unformatted',access='direct',recl=4*n_recs_out*nx*ny)
       endif

@@ -26,15 +26,15 @@
 ! Number of x and y cells in the computational grid.
 !!! (recommended default value: nx = user input required)
 !!! (recommended default value: ny = user input required)
-      nx = 1
-      ny = 1
+      nx = 250
+      ny = 250
 
 ! deltax = grid increment in x direction.  Meters.
 ! deltay = grid increment in y direction.  Meters.
 !!! (recommended default value: deltax = user input required)
 !!! (recommended default value: deltay = user input required)
-      deltax = 5.0
-      deltay = 5.0
+      deltax = 25.0
+      deltay = 25.0
 
 ! Location (like UTM, in meters) value of lower-left grid point.
 !   xmn = value of x coordinate in center of lower left grid cell.
@@ -43,8 +43,8 @@
 !     Meters.
 !!! (recommended default value: xmn = user input required)
 !!! (recommended default value: ymn = user input required)
-      xmn = 301522.5
-      ymn = 4196692.5
+      xmn = 275562.5
+      ymn = 4212562.5
 
 ! Model time step, dt.  Should be the same increment as in the input
 !   data file.  In seconds.
@@ -79,9 +79,9 @@
 
 ! Number of model iterations defines how many times to process.
 !!! (recommended default value: max_iter = user input required)
-!     max_iter = 6552
-      max_iter = 9360
-!     max_iter = 1440
+      max_iter = 6600
+!     max_iter = 1
+!     max_iter = 24
 
 ! MicroMet requires a met input file that has data in a specific
 !   format (see the MicroMet documentation).  For the case of
@@ -109,7 +109,7 @@
 !   Tair (deg C or K), rh (%), wind speed (m/s), wind direction
 !   (0-360 True N), and precipitation (mm/time_step).
 !!! (recommended default value: met_input_fname = user input required)
-      met_input_fname = met/TUO_DANA_mm.txt
+      met_input_fname = met/TUO_elev_mm.txt
 
 ! The number used as an undefined value for both inputs and outputs.
 !!! (recommended default value: undef = -9999.0)
@@ -127,7 +127,7 @@
 !     for it to point to something that doesn't exist) or you will
 !     an error message.
 !!! (recommended default value: topoveg_fname = xxxxxx)
-      topoveg_fname = met/DANA_5m_topo_veg.gdat
+      topoveg_fname = met/TUO_elev_25m_topo_veg.gdat
 
 ! For the case of using ascii text topography and vegetation files,
 !   provide the file names.  Note that if you are using a grads
@@ -238,7 +238,7 @@
 !   to be approximate, since it is used to define some of the solar
 !   radiation calculations.
 !!! (recommended default value: xlat = user input required)
-      xlat = 37.9
+      xlat = 38.1
 
 ! For the case where your domain spans enough latitude that there
 !   is significant variation in solar radiation from the top to
@@ -307,8 +307,8 @@
 !   model with "print_user = 1.0" defined below in this .par file.
 !!! (recommended default value: irun_data_assim = user input
 !!! required)
-!     irun_data_assim = 1
       irun_data_assim = 0
+!     irun_data_assim = 1
 
 ! Define whether the simulation will be assimilated with snow 
 ! depth (depth_assim = 1) instead of SWE (depth_assim = 0). If
@@ -329,7 +329,7 @@
 !   if the run has been set up to write continuously to a given
 !   output file.  This option also assumes that you have not made
 !   any changes to the model setup; it does no error checking.
-!   ihrestart_flag = -2 turns this option off, ihrestart_flag = -1
+!   ihrestart_flag = -2 turns this option off, ihrestart_flag = 0
 !   does the restart saves, and ihrestart_flag >= 0 runs a history
 !   restart where the number defines the restart iteration (e.g.,
 !   ihrestart = 720 will set iteration 720 as the intitial
@@ -338,15 +338,15 @@
 !   run will start at the begining of the second data assimilation
 !   loop.
 !!! (recommended default value: ihrestart_flag = -2)
-      ihrestart_flag = -2
-!     ihrestart_flag = -1
-!     ihrestart_flag = 3444
+!     ihrestart_flag = -2
 !     ihrestart_flag = 0
+!     ihrestart_flag = 3444
+      ihrestart_flag = -2
 
 ! For the case where you are running a history restart, define
 !   whether you want to restart the run during a standard run or
 !   the first loop of a data assimilation model run
-!   (i_dataassim_loop = 1) or during the second loop of a data
+!   (i_dataassim_loop = -1) or during the second loop of a data
 !   assimilation run (i_dataassim_loop < 0).  The value of this
 !   negative number is used to define how many obervation dates
 !   you have in your data assimilation run (e.g., -3 would mean
@@ -356,17 +356,17 @@
 !   need to first set i_corr_factor = 0 and save a history restart
 !   at the end of that run before going on to the second half of
 !   the assimilation run.
-!!! (recommended default value: i_dataassim_loop = 1)
-      i_dataassim_loop = 1
+!!! (recommended default value: i_dataassim_loop = -1)
 !     i_dataassim_loop = -1
+      i_dataassim_loop = -1
 
-! If ihrestart_flag = -1, then define how often the restart
+! If ihrestart_flag = 0, then define how often the restart
 !   files are generated.  This is in iteration units (e.g., every
 !   30 days for the model running at hourly time steps would be
 !   ihrestart_inc = 720).  The history restart files will be
 !   placed in an 'hrestart/' directory off of the main model
 !   directory.  In addition to this time increment, if the
-!   ihrestart_flag = -1, the last model iteration is always saved
+!   ihrestart_flag = 0, the last model iteration is always saved
 !   (so if you just want to save the last iteration, just set
 !   ihrestart_inc to a number bigger than your maximum iteration).
 !   Note that if you want to do history restarts with data
@@ -426,7 +426,17 @@
       i_wind_flag = 1
       i_solar_flag = 1
       i_longwave_flag = 1
-      i_prec_flag = 1
+      i_prec_flag = -1
+
+! If reading in an explicit precipitation field. Note that 
+! prec_file_flag = 1 indicates a gdat file 
+! (arranged nx*ny*time*2) with both a precipitation and frozen
+! precipitation (m/timestep) field called micromet_adj.gdat in 
+! the outputs folder.Note that assimilation can no longer occur
+! if directly reading in precipitation data 
+! (recommended default value: prec_file_flag = 0
+      prec_file_flag = 1
+
 ! END J.PFLUG
 
 ! Force the model to determine a value for every grid cell (= 1), or
@@ -525,7 +535,7 @@
 !   has units of meters, and should be approximately one-half the
 !   wavelength of the topographic features within the domain.
 !!! (recommended default value: curve_len_scale = x)
-      curve_len_scale = 200.0
+      curve_len_scale = 500.0
 
 ! The curvature and wind_slope values range between -0.5 and +0.5.
 !   Valid slopewt and curvewt values are between 0 and 1, with
@@ -535,8 +545,8 @@
 !   wind weight to between 0.5 and 1.5 (but this is not required).
 !!! (recommended default value: slopewt = 0.42)
 !!! (recommended default value: curvewt = 0.42)
-      slopewt = 0.25
-      curvewt = 0.75
+      slopewt = 0.58
+      curvewt = 0.42
 !     slopewt = x
 !     curvewt = x
 
@@ -614,7 +624,7 @@
 !   to the top-of-canopy radiation.  If you want the snow in the
 !   forest to melt faster, increasing this value will do it.
 !!! (recommended default value: gap_frac = x)
-      gap_frac = 0.4
+      gap_frac = 0.2
 
 ! To handle the case, for example, of a met station located in
 !   an inversion layer recording high relative humidity, and the
@@ -626,7 +636,7 @@
 !   the half the simulated cloud fraction, and a cloud_frac_factor
 !   = 0.0 forces the simulated cloud fraction to be zero.
 !!! (recommended default value: cloud_frac_factor = x)
-      cloud_frac_factor = 0.9
+      cloud_frac_factor = 1.0
 
 ! Define whether the simulation will assimilate shortwave radiation
 !   observations (no = 0.0, yes = 1.0).  If yes, the model assumes
@@ -660,7 +670,7 @@
 !!! (recommended default value: micromet_output_fname =
 !!! outputs/micromet.gdat)
       print_micromet = 0.0
-      micromet_output_fname = outputs/micromet.gdat
+      micromet_output_fname = outputs/referenceElev_A.gdat
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -806,8 +816,8 @@
 !   icond_flag = 1 requires running the multi-layer snowpack model
 !   with at least 2 snow layers.
 !!! (recommended default value: icond_flag = 0)
-!     icond_flag = 0
-      icond_flag = 1
+      icond_flag = 0
+!     icond_flag = 1
 
 ! Define the albedo for a glacier surface (dry and melting).
 !!! (recommended default value: albedo_glacier = 0.40)
@@ -848,7 +858,7 @@
 !!! (recommended default value: enbal_output_fname =
 !!! outputs/enbal.gdat)
       print_enbal = 0.0
-      enbal_output_fname = outputs/enbal.gdat
+      enbal_output_fname = /storage/jpflug/enbalens_vog.gdat
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -871,6 +881,11 @@
 ! parameters result in increased ice content and reduced liquid content.
 !!! (values between 10 and 1000. Recommended = 500)
       fc_param = 50
+
+! average temperature of the snowpack.This needs to be defined for single-
+! layers simulations ONLY.
+!!! (recommended: maritime: t_avg = 273.16)
+      t_avg = 273.16
 
 ! END J.PFLUG
 
@@ -961,3 +976,13 @@
 !   and sea-ice run, seaice_run = 2.0.
 !!! (recommended default value: seaice_run = 0.0)
      seaice_run = 0.0
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+! Define whether you want to run simulations with a precipitation 
+! perturbation. If perturbation = 1, no perturbation will be applied.
+! Otherwise, value will be used as a scalar multiplier. Note: in 
+! Addition to the scalar multiplier, gaussian random 15% noise will be 
+! applied at each timestep
+     
+     pertPrec = 1.0000

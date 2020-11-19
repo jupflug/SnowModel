@@ -28,6 +28,7 @@ c SnowTran-3D variables.
       real tabler_sw(nx_max,ny_max)
       real tabler_nw(nx_max,ny_max)
       real topo(nx_max,ny_max)
+      real topo_ref_grid(nx_max,ny_max)
       real vegtype(nx_max,ny_max)
 
       real uwind_grid(nx_max,ny_max),vwind_grid(nx_max,ny_max)
@@ -121,7 +122,7 @@ c MicroMet variables.
      &  i_prec_flag,i_longwave_flag,isingle_stn_flag,igrads_metfile,
      &  lapse_rate_user_flag,iprecip_lapse_rate_user_flag,n_stns_used,
      &  lat_solar_flag,ihrestart_inc,iter_start,ihrestart_flag,
-     &  albedo_flag
+     &  albedo_flag,prec_file_flag
 
       character*80 micromet_output_fname
       real xhour,ascii_topoveg,use_shortwave_obs,gap_frac,
@@ -171,7 +172,7 @@ c SnowPack variables.
      &  availCap(nx_max,ny_max),relSaturn(nx_max,ny_max),
      &  mLayerVolFracLiqTrial(nx_max,ny_max)
 
-      real sfc_sublim_flag,fc_param
+      real sfc_sublim_flag,fc_param,t_avg
 
       character*80 snowpack_output_fname,multilayer_output_fname
 
@@ -206,6 +207,7 @@ c Data assimilaion (precipitation and melt) factor variables.
      & i_dataassim_loop,i_corr_start,depth_assim
 c End data assimilaion (precipitation and melt) factor variables.
 
+      real pertPrec
 c SNOWSLIDE routine
       real accumlayersum(nx_max,ny_max)
       real accumlayer(nx_max,ny_max)

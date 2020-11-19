@@ -20,7 +20,8 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
      &  gap_frac,cloud_frac_factor,barnes_lg_domain,n_stns_used,
      &  k_stn,xlat_grid,xlon_grid,UTC_flag,icorr_factor_loop,
      &  snowmodel_line_flag,xg_line,yg_line,irun_data_assim,
-     &  wind_lapse_rate,prec_grid_sol)
+     &  wind_lapse_rate,prec_grid_sol,pertPrec,prec_file_flag,
+     &  topo_ref_grid)
 
       implicit none
 
@@ -92,13 +93,13 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer i_tair_flag,i_rh_flag,i_wind_flag,i_solar_flag,
      &  i_prec_flag,i_longwave_flag,isingle_stn_flag,igrads_metfile,
      &  lapse_rate_user_flag,iprecip_lapse_rate_user_flag,n_stns_used,
-     &  icorr_factor_loop,irun_data_assim
+     &  icorr_factor_loop,irun_data_assim,prec_file_flag,i,j
 
       real windspd_flag,winddir_flag,windspd_min,calc_subcanopy_met,
      &  T_lapse_rate,Td_lapse_rate,precip_lapse_rate,
      &  use_shortwave_obs,use_longwave_obs,use_sfc_pressure_obs,
      &  run_enbal,run_snowpack,gap_frac,cloud_frac_factor,
-     &  barnes_lg_domain,UTC_flag,wind_lapse_rate
+     &  barnes_lg_domain,UTC_flag,wind_lapse_rate,pertPrec
 
       integer nftypes
       parameter (nftypes=5)
@@ -130,7 +131,7 @@ c   valid observations to be interpolated.
       call get_obs_data(nstns_orig,Tair_orig,rh_orig,xstn_orig,
      &  ystn_orig,elev_orig,iyear,imonth,iday,xhour,undef,
      &  windspd_orig,winddir_orig,prec_orig,isingle_stn_flag,
-     &  igrads_metfile,iter,irun_data_assim,
+     &  igrads_metfile,iter,pertPrec,irun_data_assim,
      &  icorr_factor_loop)
 
 c Make the topographic calculations required by the wind and solar
@@ -235,29 +236,36 @@ c   radiation observations.
       endif
 
 c PRECIPITATION.
-      if (i_prec_flag.eq.1) then
+      if (prec_file_flag.eq.1) then
+        read (97,rec=iter)
+     &    ((prec_grid(i,j),i=1,nx),j=1,ny),
+     &    ((sprec(i,j),i=1,nx),j=1,ny)
+
+      else
+        if (i_prec_flag.eq.1) then
 c       print *,'   solving for precipitation'
-        call precipitation(nx,ny,deltax,deltay,xmn,ymn,
-     &    nstns_orig,xstn_orig,ystn_orig,prec_orig,dn,prec_grid,
-     &    undef,ifill,iobsint,iyear,imonth,iday,xhour,elev_orig,
-     &    topo,Tair_grid,sprec,corr_factor,icorr_factor_index,iter,
-     &    precip_lapse_rate,barnes_lg_domain,n_stns_used,k_stn,
-     &    snowmodel_line_flag,xg_line,yg_line,topo_ref_grid)
+          call precipitation(nx,ny,deltax,deltay,xmn,ymn,
+     &      nstns_orig,xstn_orig,ystn_orig,prec_orig,dn,prec_grid,
+     &      undef,ifill,iobsint,iyear,imonth,iday,xhour,elev_orig,
+     &      topo,Tair_grid,sprec,corr_factor,icorr_factor_index,iter,
+     &      precip_lapse_rate,barnes_lg_domain,n_stns_used,k_stn,
+     &      snowmodel_line_flag,xg_line,yg_line,topo_ref_grid)
 
 c J.PFLUG      
-      elseif (i_prec_flag.eq.-1) then
+        elseif (i_prec_flag.eq.-1) then
 
-        call read_frozen(nstns_orig,undef,prec_orig_sol,
-     &    isingle_stn_flag,iter)
+          call read_frozen(nstns_orig,undef,prec_orig_sol,
+     &      isingle_stn_flag,iter,pertPrec)
 
-        call precipitation_froz(nx,ny,deltax,deltay,xmn,ymn,
-     &    nstns_orig,xstn_orig,ystn_orig,prec_orig,prec_orig_sol,
-     &    dn,prec_grid,undef,ifill,iobsint,iyear,
-     &    imonth,iday,xhour,elev_orig,topo,Tair_grid,sprec,
-     &    corr_factor,icorr_factor_index,iter,precip_lapse_rate,
-     &    barnes_lg_domain,n_stns_used,k_stn,snowmodel_line_flag,
-     &    xg_line,yg_line,topo_ref_grid,prec_grid_sol)
+          call precipitation_froz(nx,ny,deltax,deltay,xmn,ymn,
+     &      nstns_orig,xstn_orig,ystn_orig,prec_orig,prec_orig_sol,
+     &      dn,prec_grid,undef,ifill,iobsint,iyear,
+     &      imonth,iday,xhour,elev_orig,topo,Tair_grid,sprec,
+     &      corr_factor,icorr_factor_index,iter,precip_lapse_rate,
+     &      barnes_lg_domain,n_stns_used,k_stn,snowmodel_line_flag,
+     &      xg_line,yg_line,topo_ref_grid,prec_grid_sol)
 
+        endif
       endif
 c END J.PFLUG
 
@@ -1999,7 +2007,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine get_obs_data(nstns_orig,Tair_orig,rh_orig,xstn_orig,
      &  ystn_orig,elev_orig,iyear,imonth,iday,xhour,undef,
      &  windspd_orig,winddir_orig,prec_orig,isingle_stn_flag,
-     &  igrads_metfile,iter,irun_data_assim,
+     &  igrads_metfile,iter,pertPrec,irun_data_assim,
      &  icorr_factor_loop)
 
       implicit none
@@ -2012,7 +2020,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       integer k,nstns_orig,isingle_stn_flag,igrads_metfile,iter
       integer iyear,imonth,iday
-      real u1,u2,PI,randErr
+      real pertPrec,u1,u2,PI,randErr
 
       real Tair_orig(nstns_max),rh_orig(nstns_max)
       real winddir_orig(nstns_max),windspd_orig(nstns_max)
@@ -2035,6 +2043,14 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
         print *, 'nstns_orig = ',nstns_orig
         print *
         stop
+      endif
+
+      if (pertPrec.ne.1.0) then
+c generate a normal random number using the box-mueller transformation
+        u1 = rand()
+        u2 = rand()
+c pi as according to maximum precision of compiler
+        PI = 4*atan(1.d0)
       endif
 
       do k=1,nstns_orig
@@ -2063,6 +2079,21 @@ c  the same date.
           print *,'  obs   =', iyr,imo,idy,xhr
           stop
         endif
+
+c ADD J.PFLUG
+        if (pertPrec.ne.1.0) then
+c constant perturbation scalar
+          prec_orig(k) = prec_orig(k) * pertPrec
+c          randErr = (prec_orig(k)*.15)*sqrt(-2*log(u1))*cos(2*PI*u2)
+c          if (irun_data_assim.eq.1.and.icorr_factor_loop.eq.1) then
+c            write (11,990) randErr
+c          elseif (irun_data_assim.eq.1.and.icorr_factor_loop.eq.2) then
+c            read (11,*) randErr
+c          endif
+c add random error to precip
+c          prec_orig(k) = prec_orig(k) + randErr
+        endif
+c END J.PFLUG
 
       enddo
 
@@ -3238,7 +3269,7 @@ c   the atan2 computation.
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       subroutine read_frozen(nstns_orig,undef,prec_orig_sol,
-     &  isingle_stn_flag,iter)
+     &  isingle_stn_flag,iter,pertPrec)
 
       implicit none
 
@@ -3247,6 +3278,7 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
       integer k,nstns_orig,isingle_stn_flag,iter
       real prec_orig_sol(nstns_max)
       real undef               ! undefined value
+      real pertPrec
 
 
       if (isingle_stn_flag.eq.1) then
@@ -3267,6 +3299,9 @@ ccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
       do k=1,nstns_orig
         read(99,*) prec_orig_sol(k)
+        if (pertPrec.ne.1) then
+          prec_orig_sol(k) = prec_orig_sol(k) * pertPrec
+        endif
       enddo
 
       return
@@ -3316,7 +3351,7 @@ c   terrain.  J. Hydrology, 190, 214-251.
       double precision ystn(nstns_max) ! input stn y coords
       real prec(nstns_max) ! input values
       real prec_rain(nstns_max)
-       real prec_snow(nstns_max)
+      real prec_snow(nstns_max)
       real elev(nstns_max) ! station elevation
       real undef           ! undefined value
 
@@ -3394,6 +3429,8 @@ c   even negative adjustments for high elevations).
      &      prec_grid_sol(i,j) * (1.0 + alfa)/(1.0 - alfa)
         enddo
       enddo
+
+      print *,topo_ref_grid(100,100)
 
 c Convert the precipitation values from mm to m swe.  Also, make
 c   sure the interpolation has not created any negetive

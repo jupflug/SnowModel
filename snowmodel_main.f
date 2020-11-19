@@ -53,7 +53,7 @@ c Read the input parameters.
      &  multilayer_output_fname,izero_snow_date,curve_lg_scale_flag,
      &  check_met_data,seaice_run,snowmodel_line_flag,wind_lapse_rate,
      &  albedo_diff,al_max,al_min,al_dec_cold,al_dec_melt,
-     &  fc_param,albedo_flag,depth_assim)
+     &  fc_param,t_avg,albedo_flag,pertPrec,depth_assim,prec_file_flag)
 
 
 c This loop runs the correction/data assimilation adjustment
@@ -82,6 +82,7 @@ c   calculations.
             CALL HRESTART_SAVE_DA(nx,ny,max_iter,corr_factor,
      &        icorr_factor_index,nobs_dates)
           endif
+          if (pertPrec.ne.1.0) rewind(11)
         endif
 
 c Perform a variety of preprocessing and model setup steps, like
@@ -112,7 +113,8 @@ c   files, etc.
      &    irun_data_assim,izero_snow_date,iclear_mn,iclear_dy,
      &    xclear_hr,dy_snow,swe_lyr,ro_layer,T_old,gamma,icond_flag,
      &    curve_lg_scale_flag,curve_wt_lg,check_met_data,seaice_run,
-     &    snowmodel_line_flag,xg_line,yg_line,print_user,albedo_flag)
+     &    snowmodel_line_flag,xg_line,yg_line,print_user,albedo_flag,
+     &    prec_file_flag)
 
 cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 ccccccccccccccccccccccccc  RUN THE MODEL  cccccccccccccccccccccccccccc
@@ -147,19 +149,20 @@ c Distribute the meteorological station data.
      &        gap_frac,cloud_frac_factor,barnes_lg_domain,n_stns_used,
      &        k_stn,xlat_grid,xlon_grid,UTC_flag,icorr_factor_loop,
      &        snowmodel_line_flag,xg_line,yg_line,irun_data_assim,
-     &        wind_lapse_rate,prec_grid_sol)
+     &        wind_lapse_rate,prec_grid_sol,pertPrec,prec_file_flag,
+     &        topo_ref_grid)
             
             if (print_micromet.eq.1.0) then
               if (mod(iter,iprint_inc).eq.0) then
                 write(81,rec=iter/iprint_inc)
-     &            ((Tair_grid(i,j)-273.16,i=1,nx),j=1,ny),
-     &            ((rh_grid(i,j),i=1,nx),j=1,ny),
-     &            ((windspd_grid(i,j),i=1,nx),j=1,ny),
-     &            ((winddir_grid(i,j),i=1,nx),j=1,ny),
-     &            ((Qsi_grid(i,j),i=1,nx),j=1,ny),
-     &            ((Qli_grid(i,j),i=1,nx),j=1,ny),
-     &            ((prec_grid(i,j),i=1,nx),j=1,ny),
-     &            ((sprec(i,j),i=1,nx),j=1,ny)
+c     &            ((Tair_grid(i,j)-273.16,i=1,nx),j=1,ny),
+c     &            ((rh_grid(i,j),i=1,nx),j=1,ny),
+c     &            ((windspd_grid(i,j),i=1,nx),j=1,ny),
+c     &            ((winddir_grid(i,j),i=1,nx),j=1,ny),
+c     &            ((Qsi_grid(i,j),i=1,nx),j=1,ny),
+c     &            ((Qli_grid(i,j),i=1,nx),j=1,ny),
+     &            ((topo(i,j),i=1,nx),j=1,ny),
+     &            ((topo_ref_grid(i,j),i=1,nx),j=1,ny)
               endif
             endif
           endif
@@ -208,7 +211,7 @@ c   precipitation inputs.
      &        ro_snowmax,tsls_threshold,dz_snow_min,tslsnowfall,
      &        change_layer,dy_snow,swe_lyr,ro_layer,T_old,gamma,
      &        multilayer_snowpack,seaice_run,seaice_conc,
-     &        fc_param)
+     &        fc_param,t_avg)
           endif
 
 c Run the blowing-snow model.

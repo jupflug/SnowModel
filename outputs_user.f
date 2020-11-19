@@ -173,16 +173,16 @@ c 10 = rpre(i,j) = rain(i,j)
       c_var(10) = 'y'
 
 c 11 = spre(i,j) = sprec(i,j)
-      c_var(11) = 'y'
+      c_var(11) = 'n'
 
 c 12 = smlt(i,j) = swemelt(i,j)
       c_var(12) = 'n'
 
 c 13 = ssub(i,j) = swesublim(i,j)
-      c_var(13) = 'n'
+      c_var(13) = 'y'
 
 c 14 = roff(i,j) = runoff(i,j)
-      c_var(14) = 'n'
+      c_var(14) = 'y'
 
 c 15 = glmt(i,j) = glacier_melt(i,j)
       c_var(15) = 'n'
@@ -196,13 +196,13 @@ c 17 = sden(i,j) = xro_snow(i,j)
       c_var(17) = 'y'
 
 c 18 = swed(i,j) = swe_depth(i,j)
-      c_var(18) = 'y'
+      c_var(18) = 'n'
 
 c 19 = sspr(i,j) = sum_sprec(i,j)
-      c_var(19) = 'y'
+      c_var(19) = 'n'
 
 c 20 = ssmt(i,j) = sum_swemelt(i,j)
-      c_var(20) = 'y'
+      c_var(20) = 'n'
 
 c Note that this data output implementation is currently configured
 c   to mask out the ocean points (vegtype.eq.24.0) if this is a
